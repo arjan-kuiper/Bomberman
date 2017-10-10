@@ -4,6 +4,9 @@ class Main{
         this.board = new Board();
 
         this.network.getMessage();
+
+        this.network.sendMessage({func: "createGame", name: "Arjan"});
+        // this.network.sendMessage({func: "addPlayer", name: "Alwin"});
     }
 }
 
@@ -20,6 +23,10 @@ class Network{
             });
         }
     }
+    sendMessage(msg){
+        this.socket.emit("client", msg);
+    }
+
 }
 
 class Board{
