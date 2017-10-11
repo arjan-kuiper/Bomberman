@@ -1,5 +1,3 @@
-
-
 exports.Main = function(){
 
 

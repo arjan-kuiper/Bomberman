@@ -7,7 +7,12 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http, {});
 
+var roomId;
 
+app.get('/:roomId', function (req, res) {
+    roomId = req.params.roomId;
+    res.sendFile(__dirname + '/client/index.html');
+});
 app.use('/', express.static(__dirname + '/client'));
 
 http.listen(PORT, function(){
@@ -18,6 +23,10 @@ http.listen(PORT, function(){
 
 
 io.sockets.on('connection', function(socket){
+    // Let the socket join the room from the URL
+    socket.join(roomId);
+    io.sockets.in(roomId).emit('updateGame', '<b>Debug:</b><br> You are in room: ' + roomId); //FOR DEBUGGING
+
 
     socket.on('client', function(data){
         if( typeof data.func === "undefined") return;
@@ -57,8 +66,9 @@ io.sockets.on('connection', function(socket){
     };
 
     updateGame = function(){
-        socket.emit('updateGame', {});
+        io.sockets.in(roomId).emit('updateGame', {});
     };
+    
 
 
     keyHandle = function(){

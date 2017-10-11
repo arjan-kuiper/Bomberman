@@ -13,15 +13,12 @@ class Main{
 class Network{
     constructor(){
         this.socket = io();
-        this.messageTypes = ['updateBoard'];
     }
 
     getMessage(){
-        for(var i = 0; i < this.messageTypes.length; i++){
-            this.socket.on(this.messageTypes[i], function(data){
-                console.log(data);
-            });
-        }
+        this.socket.on('updateGame', function(data){
+            document.getElementById('debugInfo').innerHTML = data; // FOR DEBUGGING
+        });
     }
     sendMessage(msg){
         this.socket.emit("client", msg);
