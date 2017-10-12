@@ -7,6 +7,11 @@ class Main{
 
         // this.network.sendMessage({func: "createGame", name: "Arjan"});
         // this.network.sendMessage({func: "addPlayer", name: "Alwin"});
+
+        window.addEventListener("keydown",function (e) {
+            this.network.sendMessage({func: "keyHandle", key: e.keyCode});
+        },false);
+
     }
 }
 
@@ -140,16 +145,6 @@ class Board{
                         x % 2 === ( !evenWidth || x < middleWidth ? 0 : 1 ) ){
                         this.board[y][x] = 1;
                     }
-
-                    // if(evenHeight){
-                    // }else{
-                    //     if( y % 2 === 0 ){
-                    //         this.board[y][x] = 2;
-                    //     }
-                    // }
-
-
-
                 }
             }
         }
