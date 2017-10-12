@@ -29,8 +29,10 @@ class Network{
 class Board{
 
     constructor(){
-        this.width = 20;
-        this.height = 20;
+
+        // 7,8, 13, 14, 19, 20
+        this.width = 19;
+        this.height = 19;
         this.cellWidth = 50;
         this.cellHeight = 50;
         this.canvas = this.createCanvas();
@@ -40,8 +42,15 @@ class Board{
             0: "Blocks/BackgroundTile.png",
             1: "Blocks/SolidBlock.png",
             2: "Blocks/ExplodableBlock.png",
+            10: "Powerups/BombPowerup.png",
+            11: "Powerups/FlamePowerup.png",
+            12: "Powerups/SpeedPowerup.png",
         };
         this.playerSprites = {};
+
+        this.createBoard();
+
+
         let t = this;
         this.loadSprites(function(){
             t.drawBoard();
@@ -73,24 +82,80 @@ class Board{
         }
     }
     drawBoard(){
-        let x = 0;
-        let y = 0;
+        for(let y=0; y < this.height ;y++){
+            for(let x=0; x < this.width ;x++){
 
-        this.ctx.drawImage(this.environmentSprites[0], x, y, 50, 50);
+                this.ctx.drawImage(this.environmentSprites[this.board[y][x]], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
 
-        x++;y++;
-        this.ctx.drawImage(this.environmentSprites[1], x*50, y*50, 50, 50);
 
-        x++;
-        this.ctx.drawImage(this.environmentSprites[2], x*50, y*50, 50, 50);
-
-        // context.drawImage(imageObj, x, y, width, height);
-
-        // for(let key in this.environmentSprites){
-        //     if(!this.environmentSprites.hasOwnProperty(key)) continue;
-        //     console.log(this.environmentSprites[key]);
-        // }
+                // if(y === 0 || x === 0 || y === this.height-1 || x === this.width-1){
+                // }else{
+                //     this.ctx.drawImage(this.environmentSprites[0], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
+                // }
+            }
+        }
     }
+
+    createBoard(){
+        let evenWidth = this.width % 2 === 0;
+        let evenHeight = this.height % 2 === 0;
+        let middleWidth = this.width/2;
+        let middleHeight = this.height/2;
+
+        for(let y=0; y < this.height ;y++){
+            this.board[y] = [];
+            for(let x=0; x < this.width ;x++){
+
+                if(y === 0 || x === 0 || y === this.height-1 || x === this.width-1){
+                    this.board[y][x] = 1;
+                }else{
+
+                    // For an X
+                    //   ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2)
+                    //
+
+                    this.board[y][x] = 0;
+
+                    // Breakable blocks as an X
+                    if( ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2) ){
+                        // this.board[y][x] = 2;
+                    }
+
+                    // Breakable blocks (sides)
+                    if( (x > 4 && x < this.width-5 && ( y === 1 || y === this.height-2 ) ) || // Top and bottom
+                        (y > 4 && y < this.height-5 && ( x === 1 || x === this.width-2 ) ) ){ // Left and right
+                        this.board[y][x] = 2;
+                    }
+
+
+                    // Breakable blocks (whole board)
+                    if( (x % 3 === ( !evenWidth || x < middleWidth ? 0 : 1 ) && x > 1 && x < this.width-2  ) ||
+                        (y % 3 === ( !evenHeight || y < middleHeight ? 0 : 1 ) && y > 1 && y < this.height-2 )
+                    ){
+                        this.board[y][x] = 2;
+                    }
+
+                    // Stones in the middle
+                    if( y % 2 === ( !evenHeight || y < middleHeight ? 0 : 1 ) &&
+                        x % 2 === ( !evenWidth || x < middleWidth ? 0 : 1 ) ){
+                        this.board[y][x] = 1;
+                    }
+
+                    // if(evenHeight){
+                    // }else{
+                    //     if( y % 2 === 0 ){
+                    //         this.board[y][x] = 2;
+                    //     }
+                    // }
+
+
+
+                }
+            }
+        }
+        console.log(this.board);
+    }
+
 }
 
 class AudioManager{
