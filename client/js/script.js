@@ -7,9 +7,9 @@ class Main{
 
         // this.network.sendMessage({func: "createGame", name: "Arjan"});
         // this.network.sendMessage({func: "addPlayer", name: "Alwin"});
-
+        let net = this.network;
         window.addEventListener("keydown",function (e) {
-            this.network.sendMessage({func: "keyHandle", key: e.keyCode});
+            net.sendMessage({func: "keyHandle", key: e.keyCode});
         },false);
 
     }
@@ -40,8 +40,16 @@ class Board{
         this.height = 19;
         this.cellWidth = 50;
         this.cellHeight = 50;
+
+
         this.canvas = this.createCanvas();
+        this.canvas.id = "board";
         this.ctx = this.canvas.getContext("2d");
+
+        this.playersCanvas = this.createCanvas();
+        this.playersCanvas.id = "players";
+        this.playersCtx = this.playersCanvas.getContext("2d");
+
         this.board = [];
         this.environmentSprites = {
             0: "Blocks/BackgroundTile.png",
@@ -51,7 +59,13 @@ class Board{
             11: "Powerups/FlamePowerup.png",
             12: "Powerups/SpeedPowerup.png",
         };
-        this.playerSprites = {};
+        this.playerSprites = {
+            1: {
+                front: "Bomberman/player1/front.gif",
+                back: "Bomberman/player1/back.gif"
+            }
+        };
+        this.playerSpriteData = {};
 
         this.createBoard();
 
@@ -60,17 +74,19 @@ class Board{
         this.loadSprites(function(){
             t.drawBoard();
         });
+        this.drawPlayers();
     }
 
     createCanvas(){
         let canvas = document.createElement("canvas");
-            canvas.width = this.cellWidth*this.width;
-            canvas.height = this.cellHeight*this.height;
-            document.querySelector("#main").appendChild(canvas);
+            canvas.width = this.cellWidth * this.width;
+            canvas.height = this.cellHeight * this.height;
+        document.querySelector("#main").appendChild(canvas);
         return canvas;
     }
     loadSprites(callback){
         let imagesToLoad = 0;
+
         for(let key in this.environmentSprites){
             if(!this.environmentSprites.hasOwnProperty(key)) continue;
             imagesToLoad++;
@@ -85,10 +101,37 @@ class Board{
                 };
             this.environmentSprites[key] = img;
         }
+        for(let i=1; i <= 4;i++){
+
+            for(let key in this.playerSprites[i]) {
+                if (!this.playerSprites[i].hasOwnProperty(key)) continue;
+
+                imagesToLoad++;
+                let img = new Image();
+                img.src = "images/Sprites/" + this.playerSprites[i][key];
+                img.onload = function(){
+                    imagesToLoad--;
+                    if(imagesToLoad === 0){
+                        console.log("Images loaded");
+                        callback();
+                    }
+                };
+                this.playerSprites[i][key] = img;
+            }
+        }
+        // let t = this;
+        // img.onload = function(){
+        //     t.playerSprites = this;
+        // };
+        // this.playerSprite = img;
     }
     drawBoard(){
+
+
+
         for(let y=0; y < this.height ;y++){
             for(let x=0; x < this.width ;x++){
+
 
                 this.ctx.drawImage(this.environmentSprites[this.board[y][x]], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
 
@@ -99,6 +142,35 @@ class Board{
                 // }
             }
         }
+    }
+    drawPlayers(){
+
+        // Find a way to write players
+        let player1 = document.createElement("img");
+            player1.src = this.playerSprites[1].front.src;
+            player1.setAttribute("class", 'player');
+
+        document.querySelector("#main").appendChild(player1);
+        //
+        // let size = 60;
+        // let x = 0;
+        // let y = 0;
+        // let xD = 0;
+        // let yD = 0;
+        // let sizeD = 50;
+        // // this.playersCtx.drawImage(this.playerSprites, 8, -8, 64, 64, 0, 0, 50, 50);
+        //
+        // // front
+        // this.playersCtx.drawImage(this.playerSprites, x+b*size, y+a*size, size, size, a*sizeD, b*sizeD, sizeD, sizeD);
+
+
+
+        for(let a = 0;a < 1024;a++){
+            for(let b = 0;b < 1024;b++){
+            }
+        }
+
+
     }
 
     createBoard(){
