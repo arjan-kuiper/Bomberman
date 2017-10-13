@@ -3,8 +3,10 @@ class Main{
         this.network = new Network();
         this.board = new Board();
 
+        let thisBoard = this.board;
         this.network.getMessage(function(data){
             console.log(data);
+            thisBoard.setBoardData(data.board);
         });
         this.allowedKeyCodes = [87, 65, 83, 68, 32, 38, 37, 40, 39]; // WASD, pijltjes en spatie
 
@@ -32,11 +34,7 @@ class Network{
 
     getMessage(callback){
         this.socket.on('updateGame', function(data){
-            console.log(data.board);
-
             callback(data);
-
-
             // document.getElementById('debugInfo').innerHTML = data; // FOR DEBUGGING
         });
     }
@@ -47,7 +45,6 @@ class Network{
 }
 
 class Board{
-
     constructor(){
 
         // Aantal tiles in de breedte en hoogte

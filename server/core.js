@@ -1,17 +1,19 @@
-exports.Main = function(roomId, socket){
-
-
+exports.Main = function(roomId, io){
     this.board = new Board();
-    this.socket = socket;
+    this.io = io;
     this.roomId = roomId;
 
     this.getBoard = function (){
         return this.board;
     };
+
     this.createGame = function () {
         this.board.createBoard();
-        socket.broadcast.to(roomId).emit("updateGame", {board: this.board.getGridData()});
     };
+
+    this.updateGame = function(){
+        this.io.sockets.in(this.roomId).emit("updateGame", {board: this.board.getGridData()});
+    }
 
     return this;
 };
@@ -19,8 +21,8 @@ exports.Main = function(roomId, socket){
 function Board(){
     this.grid = [];
     this.players = {};
-    this.width = 20;
-    this.height = 20;
+    this.width = 19;
+    this.height = 19;
     this.cellWidth = 50;
     this.cellHeight = 50;
 
@@ -28,9 +30,15 @@ function Board(){
         this.players[id] = new Player(id, name);
     };
 
+    this.removePlayer = function(id){
+        delete this.players[id];
+    }
+
+    this.getPlayers = function(){
+        return this.players;
+    }
+
     this.createBoard = function(){
-
-
         // Kijkt of het bord beedte/hoogte even is
         var evenWidth = this.width % 2 === 0;
         var evenHeight = this.height % 2 === 0;

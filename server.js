@@ -16,6 +16,9 @@ app.use('/client', express.static(path.join(__dirname + '/client')));
 app.get('/', function(req, res, next){
     res.sendFile(__dirname + '/client/setup.html');
 });
+app.get('/favicon.ico', function(req, res, next) {
+    res.status(204);
+});
 app.get('/:roomId', function(req, res, next){
     if(rooms[req.params.roomId] == undefined){
         rooms[req.params.roomId] = {clients: [], main: undefined};
@@ -35,15 +38,20 @@ server.listen(PORT, function(){
 // Sockets
 function setupSocketListeners(roomId){
     io.sockets.once('connection', function(socket){
+        // Create the room main if it doesn't exist yet
+        if(rooms[roomId].main == undefined){
+            rooms[roomId].main = core.Main(roomId, io);
+            rooms[roomId].main.createGame();
+        }
         // Add the socket to the room
         if(!rooms[roomId].clients.indexOf(socket.id) > -1){
             rooms[roomId].clients.push(socket.id);
+            rooms[roomId].main.getBoard().addPlayer(socket.id, 'Player1');
+            socket.join(roomId);
         }
-        if(rooms[roomId].main == undefined){
-            console.log(rooms);
-            console.log('Game main not set for room: ' + roomId);
-        }
-    
+        rooms[roomId].main.updateGame();
+        console.log(rooms[roomId].main.getBoard().getPlayers());
+
         socket.on('client', function(data){
             if( typeof data.func === "undefined") return;
             switch (data.func){
@@ -65,8 +73,9 @@ function setupSocketListeners(roomId){
     
         socket.on('disconnect', function(){
             rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
+            rooms[roomId].main.getBoard().removePlayer(socket.id);
             socket.disconnect(true);
             console.log('user disconnected and removed');
-        });   
+        });
     });
 }
