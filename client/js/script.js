@@ -4,14 +4,22 @@ class Main{
         this.board = new Board();
 
         this.network.getMessage();
+        this.allowedKeyCodes = [87, 65, 83, 68, 32, 38, 37, 40, 39]; // WASD, pijltjes en spatie
 
         // this.network.sendMessage({func: "createGame", name: "Arjan"});
         // this.network.sendMessage({func: "addPlayer", name: "Alwin"});
-        let net = this.network;
-        window.addEventListener("keydown",function (e) {
-            net.sendMessage({func: "keyHandle", key: e.keyCode});
-        },false);
+        this.setupListener();
+    }
 
+    setupListener(){
+        let net = this.network;
+        let allowedKeyCodes = this.allowedKeyCodes;
+        window.addEventListener("keydown",function (e) {
+            // We willen geen onnodige keyCodes sturen dus ff filteren
+            if(allowedKeyCodes.indexOf(e.keyCode) > -1){
+                net.sendMessage({func: "keyHandle", key: e.keyCode});
+            }
+        },false);
     }
 }
 
@@ -91,7 +99,7 @@ class Board{
             if(!this.environmentSprites.hasOwnProperty(key)) continue;
             imagesToLoad++;
             let img = new Image();
-                img.src = "images/Sprites/" + this.environmentSprites[key];
+                img.src = "client/images/Sprites/" + this.environmentSprites[key];
                 img.onload = function(){
                     imagesToLoad--;
                     if(imagesToLoad === 0){
@@ -108,7 +116,7 @@ class Board{
 
                 imagesToLoad++;
                 let img = new Image();
-                img.src = "images/Sprites/" + this.playerSprites[i][key];
+                img.src = "client/images/Sprites/" + this.playerSprites[i][key];
                 img.onload = function(){
                     imagesToLoad--;
                     if(imagesToLoad === 0){

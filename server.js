@@ -1,84 +1,72 @@
-
+// Constants and variables
 const PORT = 1337;
+var rooms = {};
 
-var server = require('./server/Server');
+// Modules
 var express = require('express');
 var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http, {});
+var path = require('path');
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
+// Our own modules
+var core = require('./server/core');
 
-var roomId;
-
-app.get('/:roomId', function (req, res) {
-    roomId = req.params.roomId;
-    res.sendFile(__dirname + '/client/index.html');
+// Express routing / paths
+app.use('/client', express.static(path.join(__dirname + '/client')));
+app.get('/', function(req, res, next){
+    res.sendFile(__dirname + '/client/setup.html');
 });
-app.use('/', express.static(__dirname + '/client'));
+app.get('/:roomId', function(req, res, next){
+    if(rooms[req.params.roomId] == undefined){
+        rooms[req.params.roomId] = {clients: [], main: undefined};
+    }
 
-http.listen(PORT, function(){
+    let roomId = req.params.roomId;
+    res.sendFile(__dirname + '/client/index.html', function(){
+        setupSocketListeners(roomId);
+    });
+});
+
+// Start the server and log it
+server.listen(PORT, function(){
     console.log('Server started on port ' + PORT);
 });
 
-
-
-
-io.sockets.on('connection', function(socket){
-    // Let the socket join the room from the URL
-    socket.join(roomId);
-    io.sockets.in(roomId).emit('updateGame', '<b>Debug:</b><br> You are in room: ' + roomId); //FOR DEBUGGING
-
-
-    socket.on('client', function(data){
-        if( typeof data.func === "undefined") return;
-        switch (data.func){
-            case "createGame":
-                createGame(data);
-                break;
-            case "join":
-                // join(data.joiningId);
-                break;
-            case "startGame":
-                startGame();
-                break;
-            case "keyHandle":
-                keyHandle(data);
-                break;
+// Sockets
+function setupSocketListeners(roomId){
+    io.sockets.once('connection', function(socket){
+        // Add the socket to the room
+        if(!rooms[roomId].clients.indexOf(socket.id) > -1){
+            rooms[roomId].clients.push(socket.id);
         }
-    });
-
-
-    createGame = function(data){
-        console.log("create game");
-
-        // Initialize main
-        var main = server.Main();
-
-        // Add player
-        main.getBoard().addPlayer(socket.id, data.name);
-    };
-
-    addPlayer = function(player){
-
-    };
-
-    startGame = function(){
-        console.log("start game");
-    };
-
-    updateGame = function(){
-        io.sockets.in(roomId).emit('updateGame', {});
-    };
+        if(rooms[roomId].main == undefined){
+            console.log(rooms);
+            console.log('Game main not set for room: ' + roomId);
+        }
     
-
-
-    keyHandle = function(){
-
-    };
-
-
-    socket.on('disconnect', function(){
-        console.log('user disconnected');
+        socket.on('client', function(data){
+            if( typeof data.func === "undefined") return;
+            switch (data.func){
+                case "createGame":
+                    // todo
+                    break;
+                case "join":
+                    // todo
+                    break;
+                case "startGame":
+                    // todo
+                    break;
+                case "keyHandle":
+                    //console.log('(' + socket.id + ') KeyCode: ' + data.key);
+                    console.log(rooms); // for ez debug
+                    break;
+            }
+        });
+    
+        socket.on('disconnect', function(){
+            rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
+            socket.disconnect(true);
+            console.log('user disconnected and removed');
+        });   
     });
-
-});
-
+}
