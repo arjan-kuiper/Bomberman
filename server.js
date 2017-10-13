@@ -21,7 +21,7 @@ app.get('/:roomId', function(req, res, next){
         rooms[req.params.roomId] = {clients: [], main: undefined};
     }
 
-    let roomId = req.params.roomId;
+    var roomId = req.params.roomId;
     res.sendFile(__dirname + '/client/index.html', function(){
         setupSocketListeners(roomId);
     });

@@ -26,6 +26,7 @@ html, body{
     transform: translate(-50%, -50%);
     max-width: 100%;
     max-height: 100%;
+    /*color: #F00;*/
 }
 #main #board{
     z-index: 1;

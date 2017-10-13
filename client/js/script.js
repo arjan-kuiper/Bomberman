@@ -68,21 +68,41 @@ class Board{
             12: "Powerups/SpeedPowerup.png",
         };
         this.playerSprites = {
-            1: {
-                front: "Bomberman/player1/front.gif",
-                back: "Bomberman/player1/back.gif"
+            1: { front: [], back: [], left: [], right: [] },
+            2: { front: [], back: [], left: [], right: [] },
+            3: { front: [], back: [], left: [], right: [] },
+            4: { front: [], back: [], left: [], right: [] },
+            base: {
+                front: [
+                    "Bomberman/White/Front/Bman_F_f00.png",
+                ],
+                back: [
+                    "Bomberman/White/Back/Bman_B_f00.png",
+                ],
+                side: [
+                    "Bomberman/White/Side/Bman_F_f00.png",
+                ]
             }
         };
-        this.playerSpriteData = {};
+        this.playerView = {
+            1: {direction: "left", num: 0,x: 55, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            2: {direction: "left", num: 0,x: 205, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            3: {direction: "left", num: 0,x: 255, y: 70, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            4: {direction: "left", num: 0,x: 355, y: 70, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+        };
 
         this.createBoard();
 
-
         let t = this;
         this.loadSprites(function(){
-            t.drawBoard();
+            console.log("Images loaded");
+
+            window.requestAnimationFrame(function(){
+                t.drawBoard();
+                t.drawPlayers(t);
+            });
+
         });
-        this.drawPlayers();
     }
 
     createCanvas(){
@@ -103,81 +123,96 @@ class Board{
                 img.onload = function(){
                     imagesToLoad--;
                     if(imagesToLoad === 0){
-                        console.log("Images loaded");
                         callback();
                     }
                 };
             this.environmentSprites[key] = img;
         }
-        for(let i=1; i <= 4;i++){
+        for(let key in this.playerSprites.base) {
 
-            for(let key in this.playerSprites[i]) {
-                if (!this.playerSprites[i].hasOwnProperty(key)) continue;
+            if (!this.playerSprites.base.hasOwnProperty(key)) continue;
 
-                imagesToLoad++;
-                let img = new Image();
-                img.src = "client/images/Sprites/" + this.playerSprites[i][key];
-                img.onload = function(){
-                    imagesToLoad--;
-                    if(imagesToLoad === 0){
-                        console.log("Images loaded");
-                        callback();
+            for(let i=1; i <= 4; i++){
+                let color = "";
+                if(i === 1) color = "White";
+                if(i === 2) color = "Blue";
+                if(i === 3) color = "Red";
+                if(i === 4) color = "Green";
+                for(let j=0; j <= 7; j++) {
+
+                    // this.playerSprites.base[key][i]
+
+                    imagesToLoad++;
+                    let img = new Image();
+                    img.src = "client/images/Sprites/" + this.playerSprites.base[key][0].replace("White",color).replace("f00","f0"+j);
+                    img.onload = function () {
+                        imagesToLoad--;
+                        if (imagesToLoad === 0) {
+                            callback();
+                        }
+                    };
+                    if(key === "side"){
+                        this.playerSprites[i].right[j] = img;
+
+                        let c = document.createElement('canvas');
+                            c.width = img.width;
+                            c.height = img.height;
+                        let ctx = c.getContext('2d');
+                            ctx.translate(img.width, 0);
+                            ctx.scale(-1, 1);
+                            ctx.drawImage(img, 0, 0);
+
+                        this.playerSprites[i].left[j] = c;
+                    }else{
+                        this.playerSprites[i][key][j] = img;
                     }
-                };
-                this.playerSprites[i][key] = img;
+                }
             }
         }
-        // let t = this;
-        // img.onload = function(){
-        //     t.playerSprites = this;
-        // };
-        // this.playerSprite = img;
     }
     drawBoard(){
-
-
-
         for(let y=0; y < this.height ;y++){
             for(let x=0; x < this.width ;x++){
-
-
                 this.ctx.drawImage(this.environmentSprites[this.board[y][x]], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
-
-
-                // if(y === 0 || x === 0 || y === this.height-1 || x === this.width-1){
-                // }else{
-                //     this.ctx.drawImage(this.environmentSprites[0], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
-                // }
             }
         }
     }
-    drawPlayers(){
+    drawPlayers(t){
 
-        // Find a way to write players
-        let player1 = document.createElement("img");
-            player1.src = this.playerSprites[1].front.src;
-            player1.setAttribute("class", 'player');
+        // Clear whole canvas
+        t.playersCtx.clearRect(0,0,t.playersCanvas.width,t.playersCanvas.height);
 
-        document.querySelector("#main").appendChild(player1);
-        //
-        // let size = 60;
-        // let x = 0;
-        // let y = 0;
-        // let xD = 0;
-        // let yD = 0;
-        // let sizeD = 50;
-        // // this.playersCtx.drawImage(this.playerSprites, 8, -8, 64, 64, 0, 0, 50, 50);
-        //
-        // // front
-        // this.playersCtx.drawImage(this.playerSprites, x+b*size, y+a*size, size, size, a*sizeD, b*sizeD, sizeD, sizeD);
+        // Loop through players
+        for(let key in this.playerView) {
+
+            if (!this.playerView.hasOwnProperty(key)) continue;
+
+            // Draw player
+            t.playersCtx.drawImage(
+                t.playerSprites[key][t.playerView[key].direction][t.playerView[key].num], // Image
+                0,  // x of image
+                0,  // y of image
+                64, // Width of image
+                128,// Height of image
+                t.playerView[key].x,  // x on board
+                t.playerView[key].y,  // y on board
+                t.playerView[key].w,  // Player width on board
+                t.playerView[key].h); // Player height on board
 
 
+            // New player animation image
+            t.playerView[key].num++;
 
-        for(let a = 0;a < 1024;a++){
-            for(let b = 0;b < 1024;b++){
-            }
+            // Reset animation to 0 by end
+            if(t.playerView[key].num > 7) t.playerView[key].num = 0;
         }
 
+        // Renew players
+        setTimeout(function(){
+            window.requestAnimationFrame(function(){
+                t.drawPlayers(t);
+            });
+        },50);
 
     }
 
@@ -228,7 +263,6 @@ class Board{
                 }
             }
         }
-        console.log(this.board);
     }
 
 }
