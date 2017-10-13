@@ -43,9 +43,12 @@ class Board{
 
     constructor(){
 
-        // 7,8, 13, 14, 19, 20
+        // Aantal tiles in de breedte en hoogte
+        // Mooie waardes: 7, 8, 13, 14, 19, 20
         this.width = 19;
         this.height = 19;
+
+        // Grote van een enkele tile
         this.cellWidth = 50;
         this.cellHeight = 50;
 
@@ -84,6 +87,8 @@ class Board{
                 ]
             }
         };
+
+        // Data waar de players staan en welke kant op ze kijken.
         this.playerView = {
             1: {direction: "left", num: 0,x: 55, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
             2: {direction: "left", num: 0,x: 205, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
@@ -91,8 +96,12 @@ class Board{
             4: {direction: "left", num: 0,x: 355, y: 70, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
         };
 
+
+        // Maakt het board aan.
         this.createBoard();
 
+
+        // Laad alle afbeelding van te voren.
         let t = this;
         this.loadSprites(function(){
             console.log("Images loaded");
@@ -105,6 +114,13 @@ class Board{
         });
     }
 
+
+    /**
+     *
+     * Maakt een canvas aan en returned die.
+     *
+     * @return {Element}
+     */
     createCanvas(){
         let canvas = document.createElement("canvas");
             canvas.width = this.cellWidth * this.width;
@@ -112,6 +128,11 @@ class Board{
         document.querySelector("#main").appendChild(canvas);
         return canvas;
     }
+
+    /**
+     * Laad alle sprites/afbeeldingen van te voren
+     * @param callback
+     */
     loadSprites(callback){
         let imagesToLoad = 0;
 
@@ -134,13 +155,16 @@ class Board{
 
             for(let i=1; i <= 4; i++){
                 let color = "";
+
+                // Kleuren van de spelers
                 if(i === 1) color = "White";
                 if(i === 2) color = "Blue";
                 if(i === 3) color = "Red";
                 if(i === 4) color = "Green";
+
+                // Elke speler animatie heeft 7 afbeeldingen
                 for(let j=0; j <= 7; j++) {
 
-                    // this.playerSprites.base[key][i]
 
                     imagesToLoad++;
                     let img = new Image();
@@ -151,6 +175,8 @@ class Board{
                             callback();
                         }
                     };
+
+                    // Spiegel rechterkant naar linkerkant
                     if(key === "side"){
                         this.playerSprites[i].right[j] = img;
 
@@ -170,6 +196,8 @@ class Board{
             }
         }
     }
+
+    // Print het bord op de canvas
     drawBoard(){
         for(let y=0; y < this.height ;y++){
             for(let x=0; x < this.width ;x++){
@@ -177,6 +205,11 @@ class Board{
             }
         }
     }
+
+    /**
+     * Print de spelers
+     * @param t ( this kan niet gebruikt worden omdat requestAnimationFrame gebruikt word.
+     */
     drawPlayers(t){
 
         // Clear whole canvas
@@ -216,9 +249,16 @@ class Board{
 
     }
 
+    /**
+     * Maakt het speelbord
+     */
     createBoard(){
+
+        // Kijkt of het bord beedte/hoogte even is
         let evenWidth = this.width % 2 === 0;
         let evenHeight = this.height % 2 === 0;
+
+        // Het midden van de x- en y-as
         let middleWidth = this.width/2;
         let middleHeight = this.height/2;
 
