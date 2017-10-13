@@ -3,7 +3,9 @@ class Main{
         this.network = new Network();
         this.board = new Board();
 
-        this.network.getMessage();
+        this.network.getMessage(function(data){
+            console.log(data);
+        });
         this.allowedKeyCodes = [87, 65, 83, 68, 32, 38, 37, 40, 39]; // WASD, pijltjes en spatie
 
         // this.network.sendMessage({func: "createGame", name: "Arjan"});
@@ -28,9 +30,14 @@ class Network{
         this.socket = io();
     }
 
-    getMessage(){
+    getMessage(callback){
         this.socket.on('updateGame', function(data){
-            document.getElementById('debugInfo').innerHTML = data; // FOR DEBUGGING
+            console.log(data.board);
+
+            callback(data);
+
+
+            // document.getElementById('debugInfo').innerHTML = data; // FOR DEBUGGING
         });
     }
     sendMessage(msg){
@@ -96,11 +103,6 @@ class Board{
             4: {direction: "left", num: 0,x: 355, y: 70, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
         };
 
-
-        // Maakt het board aan.
-        this.createBoard();
-
-
         // Laad alle afbeelding van te voren.
         let t = this;
         this.loadSprites(function(){
@@ -108,7 +110,7 @@ class Board{
 
             window.requestAnimationFrame(function(){
                 t.drawBoard();
-                t.drawPlayers(t);
+                t.drawPlayers();
             });
 
         });
@@ -197,112 +199,81 @@ class Board{
         }
     }
 
-    // Print het bord op de canvas
+    /**
+     * Print het bord op de canvas
+     */
     drawBoard(){
-        for(let y=0; y < this.height ;y++){
-            for(let x=0; x < this.width ;x++){
-                this.ctx.drawImage(this.environmentSprites[this.board[y][x]], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
+        if(this.board.length > 0){
+            for(let y=0; y < this.height ;y++){
+                for(let x=0; x < this.width ;x++){
+                    this.ctx.drawImage(this.environmentSprites[this.board[y][x]], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
+                }
             }
         }
+
+        let t = this;
+        setTimeout(function(){
+            window.requestAnimationFrame(function(){
+                t.drawBoard();
+            });
+        },50);
     }
 
     /**
      * Print de spelers
-     * @param t ( this kan niet gebruikt worden omdat requestAnimationFrame gebruikt word.
      */
-    drawPlayers(t){
+    drawPlayers(){
 
-        // Clear whole canvas
-        t.playersCtx.clearRect(0,0,t.playersCanvas.width,t.playersCanvas.height);
+        if(this.board.length > 0) {
+            // Clear whole canvas
+            this.playersCtx.clearRect(0, 0, this.playersCanvas.width, this.playersCanvas.height);
 
-        // Loop through players
-        for(let key in this.playerView) {
+            // Loop through players
+            for (let key in this.playerView) {
 
-            if (!this.playerView.hasOwnProperty(key)) continue;
+                if (!this.playerView.hasOwnProperty(key)) continue;
 
-            // Draw player
-            t.playersCtx.drawImage(
-                t.playerSprites[key][t.playerView[key].direction][t.playerView[key].num], // Image
-                0,  // x of image
-                0,  // y of image
-                64, // Width of image
-                128,// Height of image
-                t.playerView[key].x,  // x on board
-                t.playerView[key].y,  // y on board
-                t.playerView[key].w,  // Player width on board
-                t.playerView[key].h); // Player height on board
+                // Draw player
+                this.playersCtx.drawImage(
+                    this.playerSprites[key][this.playerView[key].direction][this.playerView[key].num], // Image
+                    0,  // x of image
+                    0,  // y of image
+                    64, // Width of image
+                    128,// Height of image
+                    this.playerView[key].x,  // x on board
+                    this.playerView[key].y,  // y on board
+                    this.playerView[key].w,  // Player width on board
+                    this.playerView[key].h); // Player height on board
 
 
-            // New player animation image
-            t.playerView[key].num++;
+                // New player animation image
+                this.playerView[key].num++;
 
-            // Reset animation to 0 by end
-            if(t.playerView[key].num > 7) t.playerView[key].num = 0;
+                // Reset animation to 0 by end
+                if (this.playerView[key].num > 7) this.playerView[key].num = 0;
+            }
         }
-
         // Renew players
+        let t = this;
         setTimeout(function(){
             window.requestAnimationFrame(function(){
-                t.drawPlayers(t);
+                t.drawPlayers();
             });
         },50);
 
     }
 
-    /**
-     * Maakt het speelbord
-     */
-    createBoard(){
-
-        // Kijkt of het bord beedte/hoogte even is
-        let evenWidth = this.width % 2 === 0;
-        let evenHeight = this.height % 2 === 0;
-
-        // Het midden van de x- en y-as
-        let middleWidth = this.width/2;
-        let middleHeight = this.height/2;
-
-        for(let y=0; y < this.height ;y++){
-            this.board[y] = [];
-            for(let x=0; x < this.width ;x++){
-
-                if(y === 0 || x === 0 || y === this.height-1 || x === this.width-1){
-                    this.board[y][x] = 1;
-                }else{
-
-                    // For an X
-                    //   ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2)
-                    //
-
-                    this.board[y][x] = 0;
-
-                    // Breakable blocks as an X
-                    if( ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2) ){
-                        // this.board[y][x] = 2;
-                    }
-
-                    // Breakable blocks (sides)
-                    if( (x > 4 && x < this.width-5 && ( y === 1 || y === this.height-2 ) ) || // Top and bottom
-                        (y > 4 && y < this.height-5 && ( x === 1 || x === this.width-2 ) ) ){ // Left and right
-                        this.board[y][x] = 2;
-                    }
-
-
-                    // Breakable blocks (whole board)
-                    if( (x % 3 === ( !evenWidth || x < middleWidth ? 0 : 1 ) && x > 1 && x < this.width-2  ) ||
-                        (y % 3 === ( !evenHeight || y < middleHeight ? 0 : 1 ) && y > 1 && y < this.height-2 )
-                    ){
-                        this.board[y][x] = 2;
-                    }
-
-                    // Stones in the middle
-                    if( y % 2 === ( !evenHeight || y < middleHeight ? 0 : 1 ) &&
-                        x % 2 === ( !evenWidth || x < middleWidth ? 0 : 1 ) ){
-                        this.board[y][x] = 1;
-                    }
-                }
-            }
-        }
+    setPlayerView(data){
+        this.playerView = data;
+    }
+    setBoardData(data){
+        this.board = data;
+    }
+    getPlayerView(){
+        return this.playerView;
+    }
+    getBoardData(){
+        return this.board;
     }
 
 }
