@@ -11,8 +11,9 @@ exports.Main = function(roomId, io){
         this.board.createBoard();
     };
 
-    this.updateGame = function(){
-        this.io.sockets.in(this.roomId).emit("updateGame", {board: this.board.getGridData()});
+    this.updateGame = function(room){
+        console.log(room);
+        this.io.sockets.in(room).emit("updateGame", {board: this.board.getGridData(), roomPlayers: this.board.getPlayers()});
     }
 
     return this;

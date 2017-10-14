@@ -1,6 +1,7 @@
 // Constants and variables
 const PORT = 1337;
 var rooms = {};
+var socketRooms = {};
 
 // Modules
 var express = require('express');
@@ -47,10 +48,10 @@ function setupSocketListeners(roomId){
         if(!rooms[roomId].clients.indexOf(socket.id) > -1){
             rooms[roomId].clients.push(socket.id);
             rooms[roomId].main.getBoard().addPlayer(socket.id, 'Player1');
+            socketRooms[socket.id] = roomId;
             socket.join(roomId);
         }
-        rooms[roomId].main.updateGame();
-        console.log(rooms[roomId].main.getBoard().getPlayers());
+        rooms[roomId].main.updateGame([roomId]);
 
         socket.on('client', function(data){
             if( typeof data.func === "undefined") return;
@@ -66,7 +67,8 @@ function setupSocketListeners(roomId){
                     break;
                 case "keyHandle":
                     //console.log('(' + socket.id + ') KeyCode: ' + data.key);
-                    console.log(rooms); // for ez debug
+                    rooms[socketRooms[socket.id]].main.getBoard().grid[Math.floor((Math.random() * 10) + 1)][Math.floor((Math.random() * 10) + 1)] = 0;
+                    rooms[socketRooms[socket.id]].main.updateGame(socketRooms[socket.id]);
                     break;
             }
         });
