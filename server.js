@@ -41,17 +41,20 @@ function setupSocketListeners(roomId){
     io.sockets.once('connection', function(socket){
         // Create the room main if it doesn't exist yet
         if(rooms[roomId].main === undefined){
-            rooms[roomId].main = new core.Main(roomId, io);
+            rooms[roomId].main = new core.Main(roomId, io, socket.id);
             rooms[roomId].main.createGame();
+        }else{
+            // console.log(rooms[roomId]);
+            // rooms[roomId].main.addPlayer(socket.io, 'test');
+            rooms[roomId].main.addPlayer(socket.id, 'test');
         }
         // Add the socket to the room
         if(!rooms[roomId].clients.indexOf(socket.id) > -1){
             rooms[roomId].clients.push(socket.id);
-            rooms[roomId].main.getBoard().addPlayer(socket.id, 'Player1');
             socketRooms[socket.id] = roomId;
             socket.join(roomId);
         }
-        rooms[roomId].main.updateGame([roomId]);
+        rooms[roomId].main.updateGame();
 
         socket.on('client', function(data){
             if( typeof data.func === "undefined") return;
@@ -66,16 +69,17 @@ function setupSocketListeners(roomId){
                     // todo
                     break;
                 case "keyHandle":
-                    //console.log('(' + socket.id + ') KeyCode: ' + data.key);
-                    rooms[socketRooms[socket.id]].main.getBoard().grid[Math.floor((Math.random() * 10) + 1)][Math.floor((Math.random() * 10) + 1)] = 0;
-                    rooms[socketRooms[socket.id]].main.updateGame(socketRooms[socket.id]);
+                    // console.log('(' + socket.id + ') KeyCode: ' + data.key);
+                    // rooms[socketRooms[socket.id]].main.getBoard().grid[Math.floor((Math.random() * 10) + 1)][Math.floor((Math.random() * 10) + 1)] = 0;
+                    // rooms[socketRooms[socket.id]].main.updateGame(socketRooms[socket.id]);
+                    rooms[socketRooms[socket.id]].main.keyHandle(data.key, socket.id);
                     break;
             }
         });
     
         socket.on('disconnect', function(){
             rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
-            rooms[roomId].main.getBoard().removePlayer(socket.id);
+            rooms[roomId].main.removePlayer(socket.id);
             socket.disconnect(true);
             console.log('user disconnected and removed');
         });

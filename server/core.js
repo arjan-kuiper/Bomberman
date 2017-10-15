@@ -1,7 +1,10 @@
-exports.Main = function(roomId, io){
+exports.Main = function(roomId, io, roomMaster){
     this.board = new Board();
     this.io = io;
     this.roomId = roomId;
+    this.roomMaster = roomMaster;
+    this.started = false;
+    this.removedPlayers = [];
 
     this.getBoard = function (){
         return this.board;
@@ -9,11 +12,64 @@ exports.Main = function(roomId, io){
 
     this.createGame = function () {
         this.board.createBoard();
+        this.board.addPlayer(roomMaster, 'Player 1');
+    };
+    this.addPlayer = function(id, name) {
+            this.board.addPlayer(id, name);
     };
 
-    this.updateGame = function(room){
-        console.log(room);
-        this.io.sockets.in(room).emit("updateGame", {board: this.board.getGridData(), roomPlayers: this.board.getPlayers()});
+    this.removePlayer = function(id){
+        this.board.removePlayer(id);
+        this.removedPlayers[this.removedPlayers.length] = id;
+        this.updateGame();
+    };
+
+    this.updateGame = function(){
+
+        this.io.sockets.in(this.roomId).emit("updateGame", {
+            board: this.board.getGridData(),
+            roomPlayers: this.board.getPlayers(),
+            playerView: this.board.getPlayerView(),
+            size: this.board.getSize(),
+            started: this.started,
+            removedPlayers: this.removedPlayers
+        });
+    };
+
+    this.startGame = function(playerId){
+        if(playerId !== this.roomMaster) return;
+        this.started = true;
+        this.updateGame();
+    };
+
+    this.keyHandle = function(keyId, playerId){
+        // WASD: 87, 65, 83, 68
+        // Pijltjes zelfde volgorde: 38, 37, 40, 39
+        // Spatie: 32
+
+        if(!this.started) return;
+
+        switch (keyId){
+            case 87:
+            case 38:
+                // Up
+                break;
+            case 65:
+            case 37:
+                // Left
+                break;
+            case 83:
+            case 40:
+                // Down
+                break;
+            case 68:
+            case 39:
+                // Right
+                break;
+            case 32:
+                // Spacebar
+                break;
+        }
     };
 
     return this;
@@ -26,18 +82,41 @@ function Board(){
     this.height = 19;
     this.cellWidth = 50;
     this.cellHeight = 50;
+    this.playerNumbers = [4,3,2,1];
 
     this.addPlayer = function(id, name){
+        if(Object.size(this.players) === 4) return;
         this.players[id] = new Player(id, name);
+        var playerNumber = this.playerNumbers.pop();
+        console.log(playerNumber);
+        this.players[id].setNumber(playerNumber);
+
+        switch (playerNumber){
+            case 1:
+                this.players[id].setPosition(55, 20);
+                break;
+            case 2:
+                this.players[id].setPosition(this.cellWidth*(this.width-2) + 5, 20);
+                break;
+            case 3:
+                this.players[id].setPosition(55, this.cellHeight*(this.height-2) - 30);
+                break;
+            case 4:
+                this.players[id].setPosition(this.cellWidth*(this.width-2) + 5, this.cellHeight*(this.height-2) - 30);
+                break;
+        }
     };
 
     this.removePlayer = function(id){
-        delete this.players[id];
-    }
+        if(typeof this.players[id] !== 'undefined'){
+            this.playerNumbers[this.playerNumbers.length] = this.players[id].getNumber();
+            delete this.players[id];
+        }
+    };
 
     this.getPlayers = function(){
         return this.players;
-    }
+    };
 
     this.createBoard = function(){
         // Kijkt of het bord beedte/hoogte even is
@@ -56,16 +135,13 @@ function Board(){
                     this.grid[y][x] = 1;
                 }else{
 
-                    // For an X
-                    //   ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2)
-                    //
 
                     this.grid[y][x] = 0;
 
                     // Breakable blocks as an X
-                    if( ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2) ){
-                        // this.grid[y][x] = 2;
-                    }
+                    // if( ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2) ){
+                    //     this.grid[y][x] = 2;
+                    // }
 
                     // Breakable blocks (sides)
                     if( (x > 4 && x < this.width-5 && ( y === 1 || y === this.height-2 ) ) || // Top and bottom
@@ -98,6 +174,27 @@ function Board(){
         return {width: this.width, height: this.height, cellWidth: this.cellWidth, cellHeight: this.cellHeight};
     };
 
+
+    this.getPlayerView = function(){
+        // this.players
+        var playerView = {};
+        for(var playerId in this.players){
+
+            if(!this.players.hasOwnProperty(playerId)) continue;
+            var player = this.players[playerId];
+            var pos = player.getPosition();
+
+
+            playerView[playerId] = {
+                direction: player.getDirection(),
+                x: pos.x,
+                y: pos.y,
+                playerNumber: player.getNumber()
+            };
+
+        }
+        return playerView;
+    }
 }
 
 function Player(id, name){
@@ -110,12 +207,12 @@ function Player(id, name){
     this.speed = 10;
     this.dead = false;
     this.direction = 1;
-
+    this.number = null;
     this.bombs[0].updateTimestamp();
+
+
     /**
-     *
      * @return Bomb
-     *
      */
     this.placeBomb = function(){
         for(var i=0; i < this.bombs.length; i++){
@@ -133,7 +230,29 @@ function Player(id, name){
 
     this.powerUp = function(type) {
 
-    }
+    };
+
+    this.getPosition = function(){
+        return {x: this.xPosition, y: this.yPosition};
+    };
+
+    this.setPosition = function(x, y){
+        this.xPosition = x;
+        this.yPosition = y;
+    };
+
+    this.getDirection = function(){
+        return [null,'front', 'left','back','right'][this.direction];
+    };
+
+
+
+    this.setNumber = function(number){
+        this.number = number;
+    };
+    this.getNumber = function(){
+        return this.number;
+    };
 
 }
 
@@ -159,3 +278,11 @@ function Bomb(){
         this.bombPower--;
     };
 }
+
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};

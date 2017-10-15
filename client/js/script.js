@@ -5,8 +5,10 @@ class Main{
 
         let thisBoard = this.board;
         this.network.getMessage(function(data){
-            console.log(data);
+            // console.log(data);
             thisBoard.setBoardData(data.board);
+            thisBoard.removePlayers(data.removedPlayers);
+            thisBoard.setPlayerView(data.playerView);
         });
         this.allowedKeyCodes = [87, 65, 83, 68, 32, 38, 37, 40, 39]; // WASD, pijltjes en spatie
 
@@ -94,11 +96,12 @@ class Board{
 
         // Data waar de players staan en welke kant op ze kijken.
         this.playerView = {
-            1: {direction: "left", num: 0,x: 55, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
-            2: {direction: "left", num: 0,x: 205, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
-            3: {direction: "left", num: 0,x: 255, y: 70, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
-            4: {direction: "left", num: 0,x: 355, y: 70, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            // 1: {direction: "left", num: 0,x: 55, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            // 2: {direction: "left", num: 0,x: this.cellWidth*(this.width-2) + 5, y: 20, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            // 3: {direction: "left", num: 0,x: 55, y: this.cellHeight*(this.height-2) - 30, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
+            // 4: {direction: "left", num: 0,x: this.cellWidth*(this.width-2) + 5, y: this.cellHeight*(this.height-2) - 30, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
         };
+        this.playerNumbers = {};
 
         // Laad alle afbeelding van te voren.
         let t = this;
@@ -232,7 +235,7 @@ class Board{
 
                 // Draw player
                 this.playersCtx.drawImage(
-                    this.playerSprites[key][this.playerView[key].direction][this.playerView[key].num], // Image
+                    this.playerSprites[this.playerView[key].playerNumber][this.playerView[key].direction][this.playerView[key].num], // Image
                     0,  // x of image
                     0,  // y of image
                     64, // Width of image
@@ -261,8 +264,46 @@ class Board{
     }
 
     setPlayerView(data){
-        this.playerView = data;
+        console.log(data);
+        console.log(this.playerView);
+        for(let playerId in data){
+
+            if(!data.hasOwnProperty(playerId)) {
+                continue;
+            }
+
+            if(typeof this.playerView[playerId] === 'undefined'){
+
+                this.playerView[playerId] = {
+                    direction: data[playerId].direction,
+                    x: data[playerId].x,
+                    y: data[playerId].y,
+                    num: 0,
+                    w: this.cellWidth-10,
+                    h: 128 / 64 * (this.cellWidth-10),
+                    playerNumber: data[playerId].playerNumber
+                };
+                this.playerNumbers[playerId] = Object.size(this.playerView);
+            }
+
+            if(this.playerView[playerId].direction !== data[playerId].direction) {
+                this.playerView[playerId].num = 0;
+            }
+            this.playerView[playerId].direction = data[playerId].direction;
+            this.playerView[playerId].x = data[playerId].x;
+            this.playerView[playerId].y = data[playerId].y;
+
+
+        }
     }
+
+    removePlayers(data){
+        for(let playerId in data){
+            console.log(this.playerView[data[playerId]]);
+            delete this.playerView[data[playerId]];
+        }
+    }
+
     setBoardData(data){
         this.board = data;
     }
@@ -281,3 +322,12 @@ class AudioManager{
 
 // Code to initialize everything
 let main = new Main();
+
+
+Object.size = function(obj) {
+    let size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
