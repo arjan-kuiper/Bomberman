@@ -40,8 +40,8 @@ server.listen(PORT, function(){
 function setupSocketListeners(roomId){
     io.sockets.once('connection', function(socket){
         // Create the room main if it doesn't exist yet
-        if(rooms[roomId].main == undefined){
-            rooms[roomId].main = core.Main(roomId, io);
+        if(rooms[roomId].main === undefined){
+            rooms[roomId].main = new core.Main(roomId, io);
             rooms[roomId].main.createGame();
         }
         // Add the socket to the room

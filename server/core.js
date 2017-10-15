@@ -14,7 +14,7 @@ exports.Main = function(roomId, io){
     this.updateGame = function(room){
         console.log(room);
         this.io.sockets.in(room).emit("updateGame", {board: this.board.getGridData(), roomPlayers: this.board.getPlayers()});
-    }
+    };
 
     return this;
 };
@@ -93,7 +93,10 @@ function Board(){
 
     this.getGridData = function(){
         return this.grid;
-    }
+    };
+    this.getSize = function(){
+        return {width: this.width, height: this.height, cellWidth: this.cellWidth, cellHeight: this.cellHeight};
+    };
 
 }
 
