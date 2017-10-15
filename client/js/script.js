@@ -261,12 +261,11 @@ class Board{
             window.requestAnimationFrame(function(){
                 t.drawPlayers();
             });
-        },50);
+        },50/3);
 
     }
 
     setPlayerView(data){
-        console.log(data);
         for(let playerId in data){
 
             if(!data.hasOwnProperty(playerId)) {
@@ -274,6 +273,7 @@ class Board{
             }
 
             if(typeof this.playerView[playerId] === 'undefined'){
+                console.log(data[playerId].x + "," + data[playerId].y);
 
                 this.playerView[playerId] = {
                     direction: data[playerId].direction,
@@ -300,7 +300,6 @@ class Board{
 
     removePlayers(data){
         for(let playerId in data){
-            console.log(this.playerView[data[playerId]]);
             delete this.playerView[data[playerId]];
         }
     }

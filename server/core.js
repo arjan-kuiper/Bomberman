@@ -35,6 +35,10 @@ exports.Main = function(roomId, io, roomMaster){
             removedPlayers: this.removedPlayers
         });
     };
+    var t = this;
+    setInterval(function(){
+        t.updateGame();
+    },50/3);
 
     this.startGame = function(playerId){
         if(playerId !== this.roomMaster) return;
@@ -50,9 +54,8 @@ exports.Main = function(roomId, io, roomMaster){
         if(!this.started) return;
 
         var player = this.board.getPlayerById(playerId);
-        var playerPos = player.getPosition();
+        var playerPos = player.getOldPosition();
         var movementBlocked = [-1, 1, 2, 25];
-
         switch (keyId){
             case 87:
             case 38:
@@ -60,7 +63,7 @@ exports.Main = function(roomId, io, roomMaster){
                 //console.log(this.board.getRelativeBlock(player.xPosition, player.yPosition, 'up'));
                 var moveToBlock = this.board.getBlockByCoords(playerPos.x, playerPos.y - this.board.cellHeight);
                 if(movementBlocked.indexOf(moveToBlock) <= 0){
-                    player.setPosition(playerPos.x, playerPos.y -= player.speed)
+                    player.goToPos(playerPos.x, playerPos.y -= player.step);
                 }
                 break;
             case 65:
@@ -68,7 +71,7 @@ exports.Main = function(roomId, io, roomMaster){
                 // Left
                 var moveToBlock = this.board.getBlockByCoords(playerPos.x - this.board.cellWidth, playerPos.y);
                 if(movementBlocked.indexOf(moveToBlock) <= 0){
-                    player.setPosition(playerPos.x -= player.speed, playerPos.y);
+                    player.goToPos(playerPos.x -= player.step, playerPos.y);
                 }
                 break;
             case 83:
@@ -76,7 +79,7 @@ exports.Main = function(roomId, io, roomMaster){
                 // Down
                 var moveToBlock = this.board.getBlockByCoords(playerPos.x, playerPos.y + this.board.cellHeight);
                 if(movementBlocked.indexOf(moveToBlock) <= 0){
-                    player.setPosition(playerPos.x, playerPos.y += player.speed);
+                    player.goToPos(playerPos.x, playerPos.y += player.step);
                 }
                 break;
             case 68:    
@@ -84,7 +87,7 @@ exports.Main = function(roomId, io, roomMaster){
                 // Right
                 var moveToBlock = this.board.getBlockByCoords(playerPos.x + this.board.cellWidth, playerPos.y);
                 if(movementBlocked.indexOf(moveToBlock) <= 0){
-                    player.setPosition(playerPos.x += player.speed, playerPos.y);
+                    player.goToPos(playerPos.x += player.step, playerPos.y);
                 }
                 break;
             case 32:
@@ -134,7 +137,6 @@ function Board(){
         if(Object.size(this.players) === 4) return;
         this.players[id] = new Player(id, name);
         var playerNumber = this.playerNumbers.pop();
-        console.log(playerNumber);
         this.players[id].setNumber(playerNumber);
 
         switch (playerNumber){
@@ -289,7 +291,7 @@ function Board(){
 
         }
         return playerView;
-    }
+    };
 
     this.spawnFire = function(gridCoords, id){
         var bombPower = this.getPlayerById(id).getBombPower();
@@ -319,12 +321,14 @@ function Player(id, name){
     this.yPosition = null;
     this.lives = 3;
     this.bombs = [new Bomb()];
-    this.speed = 50;
+    this.step = 50;
+    this.speed = 1;
     this.dead = false;
     this.direction = 1;
     this.number = null;
     this.bombs[0].updateTimestamp();
-
+    this.positionToGoTo = {x: null, y: null, time: null};
+    this.oldPosition = {x: null, y: null};
     /**
      * @return Bomb
      */
@@ -340,7 +344,7 @@ function Player(id, name){
 
     this.getBombPower = function(){
         return this.bombs[0].getPower();
-    }
+    };
 
     this.hit = function(){
 
@@ -351,12 +355,43 @@ function Player(id, name){
     };
 
     this.getPosition = function(){
+        if(this.positionToGoTo.time !== null){
+            if(Date.now() - this.positionToGoTo.time < (2 - this.speed)*1000){
+                // if(Date.now() - this.positionToGoTo.time > 100){
+                //     this.positionToGoTo.time = null;
+                // }
+                var stepSizeX = (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 );
+                //
+                console.log( "-----");
+                // console.log( this.positionToGoTo.x);
+                // console.log(  this.oldPosition.x );
+                // console.log( stepSizeX );
+                // console.log( (Date.now() - this.positionToGoTo.time) );
+                // console.log( stepSizeX / (Date.now() - this.positionToGoTo.time) );
+                console.log( ( (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
+                // console.log( (Date.now() - this.positionToGoTo.time) );
+                // console.log( ( (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
+                this.xPosition = this.oldPosition.x + ( ( (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
+                this.yPosition = this.oldPosition.y + ( ( (this.positionToGoTo.y - this.oldPosition.y) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
+            }else{
+                this.positionToGoTo.time = null;
+            }
+        }
         return {x: this.xPosition, y: this.yPosition};
+    };
+    this.goToPos = function(x, y){
+        this.setPosition(x, y);
+        // this.positionToGoTo = {x: x, y: y, time: Date.now()};
+        // this.oldPosition = {x: this.xPosition, y: this.yPosition};
     };
 
     this.setPosition = function(x, y){
         this.xPosition = x;
         this.yPosition = y;
+        this.oldPosition = { x: x, y: y };
+    };
+    this.getOldPosition = function(){
+        return this.oldPosition;
     };
 
     this.getDirection = function(){
@@ -365,7 +400,7 @@ function Player(id, name){
 
     this.getId = function(){
         return this.id;
-    }
+    };
 
     this.setNumber = function(number){
         this.number = number;
