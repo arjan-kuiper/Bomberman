@@ -75,6 +75,8 @@ class Board{
             10: "Powerups/BombPowerup.png",
             11: "Powerups/FlamePowerup.png",
             12: "Powerups/SpeedPowerup.png",
+            25: "Bomb/Bomb_f02.png",
+            26: "Flame/Flame_f02.png"
         };
         this.playerSprites = {
             1: { front: [], back: [], left: [], right: [] },
@@ -265,7 +267,6 @@ class Board{
 
     setPlayerView(data){
         console.log(data);
-        console.log(this.playerView);
         for(let playerId in data){
 
             if(!data.hasOwnProperty(playerId)) {

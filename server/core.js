@@ -46,30 +46,76 @@ exports.Main = function(roomId, io, roomMaster){
         // WASD: 87, 65, 83, 68
         // Pijltjes zelfde volgorde: 38, 37, 40, 39
         // Spatie: 32
-
+        this.started = true;
         if(!this.started) return;
+
+        var player = this.board.getPlayerById(playerId);
+        var playerPos = player.getPosition();
+        var movementBlocked = [-1, 1, 2, 25];
 
         switch (keyId){
             case 87:
             case 38:
                 // Up
+                //console.log(this.board.getRelativeBlock(player.xPosition, player.yPosition, 'up'));
+                var moveToBlock = this.board.getBlockByCoords(playerPos.x, playerPos.y - this.board.cellHeight);
+                if(movementBlocked.indexOf(moveToBlock) <= 0){
+                    player.setPosition(playerPos.x, playerPos.y -= player.speed)
+                }
                 break;
             case 65:
             case 37:
                 // Left
+                var moveToBlock = this.board.getBlockByCoords(playerPos.x - this.board.cellWidth, playerPos.y);
+                if(movementBlocked.indexOf(moveToBlock) <= 0){
+                    player.setPosition(playerPos.x -= player.speed, playerPos.y);
+                }
                 break;
             case 83:
             case 40:
                 // Down
+                var moveToBlock = this.board.getBlockByCoords(playerPos.x, playerPos.y + this.board.cellHeight);
+                if(movementBlocked.indexOf(moveToBlock) <= 0){
+                    player.setPosition(playerPos.x, playerPos.y += player.speed);
+                }
                 break;
-            case 68:
+            case 68:    
             case 39:
                 // Right
+                var moveToBlock = this.board.getBlockByCoords(playerPos.x + this.board.cellWidth, playerPos.y);
+                if(movementBlocked.indexOf(moveToBlock) <= 0){
+                    player.setPosition(playerPos.x += player.speed, playerPos.y);
+                }
                 break;
             case 32:
-                // Spacebar
+                // Spacebar - Place bomb and remove after 3 seconds.
+                if(player.placeBomb() != null){
+                    var gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y);
+                    var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
+
+                    this.board.grid[gridCoords.y][gridCoords.x] = 25;
+
+                    var board = this.board;
+                    var tempGame = this;
+                    var fireCells;
+
+                    setTimeout(function(){
+                        fireCells = board.spawnFire(gridCoords, playerId);
+                        tempGame.updateGame();
+                        console.log(fireCells);
+
+                        setTimeout(function(){
+                            for(var i = 0; i < fireCells.length; i++){
+                                board.grid[fireCells[i].y][fireCells[i].x] = 0;
+                            }
+                            tempGame.updateGame();
+                        }, 1000);
+                    }, 3000);
+                }
                 break;
         }
+
+        this.updateGame();
     };
 
     return this;
@@ -113,6 +159,14 @@ function Board(){
             delete this.players[id];
         }
     };
+
+    this.getPlayerById = function(id){
+        for(var p in this.players){
+            if(p === id){
+                return this.players[id];
+            }
+        }
+    }
 
     this.getPlayers = function(){
         return this.players;
@@ -174,6 +228,47 @@ function Board(){
         return {width: this.width, height: this.height, cellWidth: this.cellWidth, cellHeight: this.cellHeight};
     };
 
+    this.getGridFromCoords = function(x, y){
+        realX = x + 20;
+        realY = y + 45;
+        
+        for(var j = 0; j < this.grid.length; j++){
+            for(var i = 0; i < this.grid[j].length; i++){
+                cellX = j*this.cellWidth;
+                cellY = i*this.cellHeight;
+
+                if(realX > cellX && realX < cellX + this.cellWidth){
+                    if(realY > cellY && realY < cellY + this.cellHeight){
+                        return {
+                            x: j,
+                            y: i
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    this.getBlockByCoords = function(x, y){
+        realX = x + 20;
+        realY = y + 45;
+        
+        for(var j = 0; j < this.grid.length; j++){
+            for(var i = 0; i < this.grid[j].length; i++){
+                cellX = j*this.cellWidth;
+                cellY = i*this.cellHeight;
+
+                if(realX > cellX && realX < cellX + this.cellWidth){
+                    if(realY > cellY && realY < cellY + this.cellHeight){
+                        return this.grid[i][j];
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
+
 
     this.getPlayerView = function(){
         // this.players
@@ -195,6 +290,26 @@ function Board(){
         }
         return playerView;
     }
+
+    this.spawnFire = function(gridCoords, id){
+        var bombPower = this.getPlayerById(id).getBombPower();
+        var fireCells = [{x: gridCoords.x, y: gridCoords.y}];
+        this.grid[gridCoords.y][gridCoords.x] = 26;
+
+        // Needs rework to EXclude diagonal bombing LOL.
+        for(var i = -bombPower; i <= bombPower; i++){
+            if(this.grid[gridCoords.y][gridCoords.x+i] == 0 || this.grid[gridCoords.y][gridCoords.x+i] == 2){
+                fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
+                this.grid[gridCoords.y][gridCoords.x+i] = 26;
+            }
+            if(this.grid[gridCoords.y+i][gridCoords.x] == 0 || this.grid[gridCoords.y+i][gridCoords.x] == 2){
+                fireCells.push({x: gridCoords.x, y: gridCoords.y+i});
+                this.grid[gridCoords.y+i][gridCoords.x] = 26;
+            }
+        }
+
+        return fireCells;
+    }
 }
 
 function Player(id, name){
@@ -204,12 +319,11 @@ function Player(id, name){
     this.yPosition = null;
     this.lives = 3;
     this.bombs = [new Bomb()];
-    this.speed = 10;
+    this.speed = 50;
     this.dead = false;
     this.direction = 1;
     this.number = null;
     this.bombs[0].updateTimestamp();
-
 
     /**
      * @return Bomb
@@ -223,6 +337,10 @@ function Player(id, name){
         }
         return null;
     };
+
+    this.getBombPower = function(){
+        return this.bombs[0].getPower();
+    }
 
     this.hit = function(){
 
@@ -245,7 +363,9 @@ function Player(id, name){
         return [null,'front', 'left','back','right'][this.direction];
     };
 
-
+    this.getId = function(){
+        return this.id;
+    }
 
     this.setNumber = function(number){
         this.number = number;
@@ -257,7 +377,7 @@ function Player(id, name){
 }
 
 function Bomb(){
-    this.timestamp = 0;
+    this.timestamp = Date.now();
     this.bombPower = 1;
 
     this.canPlace = function(){
@@ -277,6 +397,10 @@ function Bomb(){
         if(this.bombPower === 1) return;
         this.bombPower--;
     };
+
+    this.getPower = function(){
+        return this.bombPower;
+    }
 }
 
 Object.size = function(obj) {
