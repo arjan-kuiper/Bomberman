@@ -1,0 +1,72 @@
+body {
+    font-family: 'Fugaz One', cursive;
+    background-color: #062b3b;
+}
+#wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    margin: 0 auto;
+    margin-top: -250px;
+    margin-left: -250px;
+    text-align: center;
+    color: white;
+}
+#wrapper h1 {
+    font-size: 5em;
+}
+.form input {
+    font-size: 1.2em;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    margin-bottom: 4%;
+    padding: 3%;
+    transition: all .30s ease-in-out;
+    text-align: center;
+    color: #555;
+    border: 1px solid #ccc;
+    outline: none;
+    background: #fff;
+}
+.form input:focus {
+    padding: 3%;
+    border: 1px solid #43d1af;
+    box-shadow: 0 0 5px #43d1af;
+}
+.form button {
+    font-size: 1.2em;
+    font-weight: bold;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 3%;
+    color: #fff;
+    border-top-style: none;
+    border-right-style: none;
+    border-bottom: 2px solid #30c29e;
+    border-left-style: none;
+    background: #43d1af;
+}
+.form button:hover {
+    cursor: pointer;
+    background: #2ebc99;
+}
+/* To get the placeholder text in input to display center */
+
+::-webkit-input-placeholder {
+    text-align: center;
+}
+:-moz-placeholder {
+    text-align: center;
+}
+::-moz-placeholder {
+    text-align: center;
+}
+:-ms-input-placeholder {
+    text-align: center;
+}

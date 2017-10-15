@@ -5,12 +5,18 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="client/css/setup.css" />
+    <link href="https://fonts.googleapis.com/css?family=Fugaz+One" rel="stylesheet">
     <title>Bomberman</title>
 </head>
 <body>
-    <h3>Enter the Room ID</h3>
-    <input id="roomId" type="text" placeholder="Ex. fSL9rx1">
-    <button onclick="gotoRoom();">Enter</button>
+    <div id="wrapper">
+        <h1>BOMBERMAN</h1>
+        <div class="form">
+            <input id="roomId" type="text" placeholder="Room Name"><br>
+            <button onclick="gotoRoom();">ENTER</button>
+        </div>
+    </div>
 
     <script>
         function gotoRoom(){
