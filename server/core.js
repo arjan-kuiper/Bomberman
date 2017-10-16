@@ -25,6 +25,13 @@ exports.Main = function(roomId, io, roomMaster){
     };
 
     this.updateGame = function(){
+        // Gotta update our removedPlayers;
+        for(var player in this.board.deadPlayers){
+            this.removePlayer(player);
+        }
+        this.board.deadPlayers = [];
+
+        // Send the update info
         this.io.sockets.in(this.roomId).emit("updateGame", {
             board: this.board.getGridData(),
             roomPlayers: this.board.getPlayers(),
@@ -197,6 +204,7 @@ function Board(){
     this.cellWidth = 50;
     this.cellHeight = 50;
     this.playerNumbers = [4,3,2,1];
+    this.deadPlayers = [];
 
     this.addPlayer = function(id, name){
         if(Object.size(this.players) === 4) return;
@@ -357,7 +365,7 @@ function Board(){
                 if(fireCells[i].x === playerBlock.x && fireCells[i].y === playerBlock.y){
                     this.players[player].hit();
                     if(this.players[player].isDead()){
-                        // TODO REMOVE PLAYER
+                        this.deadPlayers.push(player);
                         console.log(player + ' died.');
                     }
                 }
@@ -398,6 +406,7 @@ function Board(){
                 if(blockType == 0 || blockType == 2){
                     fireCells.push({x: gridCoords.x, y: gridCoords.y-i});
                     this.grid[gridCoords.y-i][gridCoords.x] = 26;
+                    if(blockType == 2) break;
                 }else{
                     break;
                 }
@@ -410,6 +419,7 @@ function Board(){
                 if(blockType == 0 || blockType == 2){
                     fireCells.push({x: gridCoords.x, y: gridCoords.y+i});
                     this.grid[gridCoords.y+i][gridCoords.x] = 26;
+                    if(blockType == 2) break;
                 }else{
                     break;
                 }
@@ -422,6 +432,7 @@ function Board(){
                 if(blockType == 0 || blockType == 2){
                     fireCells.push({x: gridCoords.x-i, y: gridCoords.y});
                     this.grid[gridCoords.y][gridCoords.x-i] = 26;
+                    if(blockType == 2) break;
                 }else{
                     break;
                 }
@@ -434,6 +445,7 @@ function Board(){
                 if(blockType == 0 || blockType == 2){
                     fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
                     this.grid[gridCoords.y][gridCoords.x+i] = 26;
+                    if(blockType == 2) break;
                 }else{
                     break;
                 }
