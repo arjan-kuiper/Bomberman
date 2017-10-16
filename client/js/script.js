@@ -260,7 +260,14 @@ class Board{
                     this.playerView[key].y,  // y on board
                     this.playerView[key].w,  // Player width on board
                     this.playerView[key].h); // Player height on board
+                
+                // Draw the playername\
+                
 
+                this.playersCtx.font = "20px Arial";
+                this.playersCtx.fillStyle = "white";
+                this.playersCtx.textAlign = "center";
+                this.playersCtx.fillText("Name",(this.playerView[key].x + 20),this.playerView[key].y);
 
                 // New player animation image
                 this.playerView[key].num++;
