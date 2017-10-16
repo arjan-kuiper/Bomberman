@@ -25,12 +25,6 @@ exports.Main = function(roomId, io, roomMaster){
     };
 
     this.updateGame = function(){
-        // Gotta update our removedPlayers;
-        for(var player in this.board.deadPlayers){
-            this.removePlayer(player);
-        }
-        this.board.deadPlayers = [];
-
         // Send the update info
         this.io.sockets.in(this.roomId).emit("updateGame", {
             board: this.board.getGridData(),
