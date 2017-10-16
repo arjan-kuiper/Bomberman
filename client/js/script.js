@@ -15,15 +15,29 @@ class Main{
         // this.network.sendMessage({func: "createGame", name: "Arjan"});
         // this.network.sendMessage({func: "addPlayer", name: "Alwin"});
         this.setupListener();
+        this.keyPress = null;
+
+        let t = this;
+        this.keySend = setInterval(function(){
+            // console.log(t.keyPress);
+            if(t.keyPress === null) return;
+            t.network.sendMessage({func: "keyHandle", key: t.keyPress});
+        },17);
     }
 
     setupListener(){
-        let net = this.network;
         let allowedKeyCodes = this.allowedKeyCodes;
+        let t = this;
         window.addEventListener("keydown",function (e) {
             // We willen geen onnodige keyCodes sturen dus ff filteren
             if(allowedKeyCodes.indexOf(e.keyCode) > -1){
-                net.sendMessage({func: "keyHandle", key: e.keyCode});
+                t.keyPress = e.keyCode;
+            }
+        },false);
+        window.addEventListener("keyup",function (e) {
+            // We willen geen onnodige keyCodes sturen dus ff filteren
+            if(allowedKeyCodes.indexOf(e.keyCode) > -1){
+                t.keyPress = null;
             }
         },false);
     }

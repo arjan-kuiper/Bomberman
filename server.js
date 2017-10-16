@@ -69,7 +69,7 @@ function setupSocketListeners(roomId){
                     // todo
                     break;
                 case "keyHandle":
-                    console.log('(' + socket.id + ') KeyCode: ' + data.key);
+                    // console.log('(' + socket.id + ') KeyCode: ' + data.key);
                     // rooms[socketRooms[socket.id]].main.getBoard().grid[Math.floor((Math.random() * 10) + 1)][Math.floor((Math.random() * 10) + 1)] = 0;
                     // rooms[socketRooms[socket.id]].main.updateGame(socketRooms[socket.id]);
                     rooms[socketRooms[socket.id]].main.keyHandle(data.key, socket.id);
