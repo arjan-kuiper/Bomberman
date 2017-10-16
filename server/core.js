@@ -54,7 +54,7 @@ exports.Main = function(roomId, io, roomMaster){
         if(!this.started) return;
 
         var player = this.board.getPlayerById(playerId);
-        var playerPos = player.getOldPosition();
+        var playerPos = player.getPosition();
         var movementBlocked = [-1, 1, 2, 25];
 
         var globalSpeed = 4;
@@ -64,24 +64,39 @@ exports.Main = function(roomId, io, roomMaster){
             right: 10,
             bottom: this.board.cellHeight-40,
         };
+
         var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
+        var playerPoints = player.getCollisionPoints();
+
         switch (keyId){
             case 87:
             case 38:
                 // Up
+                var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y-1);
+
                 var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
-                if( (playerPos.x ) % 50 < 7 && movementBlocked.indexOf(moveToBlock) <= 0 ||
-                    ( currentBlock.y * this.board.cellHeight + maxBlockCollision.top ) < playerPos.y - player.speed*globalSpeed ){
+
+
+                if( ( blockPoints.bottomLeft.x < playerPoints.topLeft.x &&
+                      blockPoints.bottomRight.x > playerPoints.topRight.x &&
+                      movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                    currentBlock.y * 50 < playerPos.y-player.speed*globalSpeed + 40 ){
                     player.setPosition(playerPos.x, playerPos.y -= player.speed*globalSpeed);
                 }
                 break;
             case 65:
             case 37:
                 // Left
+
+
+                var blockPoints = this.board.blockCollisions(currentBlock.x-1, currentBlock.y);
+
                 var moveToBlock = this.board.getBlock(currentBlock.x-1, currentBlock.y);
 
-                if( (playerPos.y + 40) % 50 < 5 && movementBlocked.indexOf(moveToBlock) <= 0 ||
-                    ( currentBlock.x * this.board.cellWidth + maxBlockCollision.left) < playerPos.x - player.speed*globalSpeed){
+                if( ( blockPoints.topRight.y < playerPoints.topLeft.y &&
+                        blockPoints.bottomRight.y > playerPoints.bottomLeft.y &&
+                        movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                    currentBlock.x * 50 < playerPos.x - player.speed*globalSpeed ){
                     player.setPosition(playerPos.x -= player.speed*globalSpeed, playerPos.y);
                 }
 
@@ -89,21 +104,29 @@ exports.Main = function(roomId, io, roomMaster){
             case 83:
             case 40:
                 // Down
+                var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y+1);
+
                 var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
 
-                if( (playerPos.x ) % 50 < 7 && movementBlocked.indexOf(moveToBlock) <= 0 ||
-                    ( currentBlock.y * this.board.cellHeight + maxBlockCollision.bottom) < playerPos.y + player.speed*globalSpeed ){
+
+                if( ( blockPoints.topLeft.x < playerPoints.bottomLeft.x &&
+                        blockPoints.topRight.x > playerPoints.bottomRight.x &&
+                        movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                    currentBlock.y * 50 < playerPos.y+player.speed*globalSpeed ){
                     player.setPosition(playerPos.x, playerPos.y += player.speed*globalSpeed);
                 }
                 break;
             case 68:    
             case 39:
                 // Right
+                var blockPoints = this.board.blockCollisions(currentBlock.x+1, currentBlock.y);
 
                 var moveToBlock = this.board.getBlock(currentBlock.x+1, currentBlock.y);
 
-                if( (playerPos.y + 40) % 50 < 5 && movementBlocked.indexOf(moveToBlock) <= 0 ||
-                    ( currentBlock.x * this.board.cellWidth + maxBlockCollision.right) < playerPos.x + player.speed*globalSpeed){
+                if( ( blockPoints.topLeft.y < playerPoints.topRight.y &&
+                        blockPoints.bottomLeft.y > playerPoints.bottomRight.y &&
+                        movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                    currentBlock.x * 50 > playerPos.x - 5 ){
                     player.setPosition(playerPos.x += player.speed*globalSpeed, playerPos.y);
                 }
 
@@ -138,6 +161,7 @@ exports.Main = function(roomId, io, roomMaster){
 
         this.updateGame();
     };
+
 
     return this;
 };
@@ -269,16 +293,14 @@ function Board(){
         }
     };
     this.getBlockXAndY = function(x, y){
-        //
-        // var blockX =
-        // var blockY =
         return {
-            x: parseInt((x)/this.cellWidth),
-            y: parseInt((y+40)/this.cellHeight)
+            x: parseInt( ( x ) / this.cellWidth),
+            y: parseInt( ( y + 40 ) / this.cellHeight),
+            xInBlock: x % this.cellWidth,
+            yInBlock: y % this.cellHeight
         };
     };
     this.getBlock = function(x,y){
-
         return this.grid[y][x];
     };
 
@@ -348,7 +370,29 @@ function Board(){
         }
 
         return fireCells;
-    }
+    };
+
+    this.blockCollisions = function(x, y){
+        return {
+            topLeft: {
+                x: x*this.cellWidth,
+                y: y*this.cellHeight,
+            },
+            topRight: {
+                x: x*this.cellWidth + this.cellWidth,
+                y: y*this.cellHeight,
+            },
+            bottomLeft: {
+                x: x*this.cellWidth,
+                y: y*this.cellHeight + this.cellHeight,
+            },
+            bottomRight: {
+                x: x*this.cellWidth + this.cellWidth,
+                y: y*this.cellHeight + this.cellHeight,
+            },
+        };
+    };
+
 }
 
 function Player(id, name){
@@ -379,6 +423,28 @@ function Player(id, name){
         return null;
     };
 
+
+    this.getCollisionPoints = function(){
+        return {
+            topLeft: {
+                x: this.xPosition,
+                y: this.yPosition+40,
+            },
+            topRight: {
+                x: this.xPosition+40,
+                y: this.yPosition+40,
+            },
+            bottomLeft: {
+                x: this.xPosition,
+                y: this.yPosition+80,
+            },
+            bottomRight: {
+                x: this.xPosition+40,
+                y: this.yPosition+80,
+            },
+        };
+    };
+
     this.getBombPower = function(){
         return this.bombs[0].getPower();
     };
@@ -400,10 +466,6 @@ function Player(id, name){
         this.yPosition = y;
         this.oldPosition = { x: x, y: y };
     };
-    this.getOldPosition = function(){
-        return this.oldPosition;
-    };
-
     this.getDirection = function(){
         return [null,'front', 'left','back','right'][this.direction];
     };
