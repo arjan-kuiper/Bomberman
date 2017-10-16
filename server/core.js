@@ -52,7 +52,7 @@ exports.Main = function(roomId, io, roomMaster){
         // Spatie: 32
         this.started = true;
         if(!this.started) return;
-
+        // console.log(playerId);
         var player = this.board.getPlayerById(playerId);
         var playerPos = player.getPosition();
         var movementBlocked = [-1, 1, 2, 25];
@@ -67,11 +67,13 @@ exports.Main = function(roomId, io, roomMaster){
 
         var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
         var playerPoints = player.getCollisionPoints();
-
         switch (keyId){
             case 87:
             case 38:
                 // Up
+
+                player.setDirection(3);
+
                 var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y-1);
 
                 var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
@@ -88,6 +90,7 @@ exports.Main = function(roomId, io, roomMaster){
             case 37:
                 // Left
 
+                player.setDirection(2);
 
                 var blockPoints = this.board.blockCollisions(currentBlock.x-1, currentBlock.y);
 
@@ -104,6 +107,7 @@ exports.Main = function(roomId, io, roomMaster){
             case 83:
             case 40:
                 // Down
+                player.setDirection(1);
                 var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y+1);
 
                 var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
@@ -119,6 +123,7 @@ exports.Main = function(roomId, io, roomMaster){
             case 68:    
             case 39:
                 // Right
+                player.setDirection(4);
                 var blockPoints = this.board.blockCollisions(currentBlock.x+1, currentBlock.y);
 
                 var moveToBlock = this.board.getBlock(currentBlock.x+1, currentBlock.y);
@@ -134,9 +139,27 @@ exports.Main = function(roomId, io, roomMaster){
             case 32:
                 // Spacebar - Place bomb and remove after 3 seconds.
                 if(player.placeBomb() != null){
-                    var gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y);
-                    var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
 
+
+
+                    var gridCoords = this.board.getBlockXAndY(playerPos.x+20, playerPos.y+20);
+                    // 3,2,1,4
+                    // switch (player.getDirection()){
+                    //     case 3:
+                    //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y);
+                    //         gridCoords = this.board.getBlock(playerPos.x, playerPos.y);
+                    //     case 2:
+                    //         gridCoords = this.board.getGridFromCoords(playerPos.x-1, playerPos.y-1);
+                    //     case 1:
+                    //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y+1);
+                    //     case 4:
+                    //         gridCoords = this.board.getGridFromCoords(playerPos.x+1, playerPos.y);
+                    //
+                    // }
+                    // console.log(playerPos);
+                    console.log(gridCoords);
+
+                    var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
                     this.board.grid[gridCoords.y][gridCoords.x] = 25;
 
                     var board = this.board;
@@ -146,7 +169,7 @@ exports.Main = function(roomId, io, roomMaster){
                     setTimeout(function(){
                         fireCells = board.spawnFire(gridCoords, playerId);
                         tempGame.updateGame();
-                        console.log(fireCells);
+                        // console.log(fireCells);
 
                         setTimeout(function(){
                             for(var i = 0; i < fireCells.length; i++){
@@ -342,7 +365,7 @@ function Board(){
 
 
             playerView[playerId] = {
-                direction: player.getDirection(),
+                direction: [null,'front', 'left','back','right'][player.getDirection()],
                 x: pos.x,
                 y: pos.y,
                 playerNumber: player.getNumber()
@@ -358,16 +381,20 @@ function Board(){
         this.grid[gridCoords.y][gridCoords.x] = 26;
 
         // Needs rework to EXclude diagonal bombing LOL.
+        // Now it can through walls..
         for(var i = -bombPower; i <= bombPower; i++){
+
             if(this.grid[gridCoords.y][gridCoords.x+i] == 0 || this.grid[gridCoords.y][gridCoords.x+i] == 2){
                 fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
                 this.grid[gridCoords.y][gridCoords.x+i] = 26;
             }
-            if(this.grid[gridCoords.y+i][gridCoords.x] == 0 || this.grid[gridCoords.y+i][gridCoords.x] == 2){
+            if( typeof  this.grid[gridCoords.y+i] !== 'undefined' && ( this.grid[gridCoords.y+i][gridCoords.x] == 0 || this.grid[gridCoords.y+i][gridCoords.x] == 2 ) ){
                 fireCells.push({x: gridCoords.x, y: gridCoords.y+i});
                 this.grid[gridCoords.y+i][gridCoords.x] = 26;
             }
         }
+
+
 
         return fireCells;
     };
@@ -408,8 +435,6 @@ function Player(id, name){
     this.direction = 1;
     this.number = null;
     this.bombs[0].updateTimestamp();
-    this.positionToGoTo = {x: null, y: null, time: null};
-    this.oldPosition = {x: null, y: null};
     /**
      * @return Bomb
      */
@@ -464,10 +489,12 @@ function Player(id, name){
     this.setPosition = function(x, y){
         this.xPosition = x;
         this.yPosition = y;
-        this.oldPosition = { x: x, y: y };
     };
     this.getDirection = function(){
-        return [null,'front', 'left','back','right'][this.direction];
+        return this.direction;
+    };
+    this.setDirection = function(direction){
+        this.direction = direction;
     };
 
     this.getId = function(){
@@ -485,7 +512,7 @@ function Player(id, name){
 
 function Bomb(){
     this.timestamp = Date.now();
-    this.bombPower = 1;
+    this.bombPower = 2;
 
     this.canPlace = function(){
         return Date.now() - this.timestamp > 3000;

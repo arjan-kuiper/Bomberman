@@ -15,13 +15,14 @@ class Main{
         // this.network.sendMessage({func: "createGame", name: "Arjan"});
         // this.network.sendMessage({func: "addPlayer", name: "Alwin"});
         this.setupListener();
-        this.keyPress = null;
+        this.keyPress = {};
 
         let t = this;
         this.keySend = setInterval(function(){
-            // console.log(t.keyPress);
-            if(t.keyPress === null) return;
-            t.network.sendMessage({func: "keyHandle", key: t.keyPress});
+
+            for(let k in t.keyPress){
+                t.network.sendMessage({func: "keyHandle", key: parseInt(k)});
+            }
         },17);
     }
 
@@ -31,13 +32,13 @@ class Main{
         window.addEventListener("keydown",function (e) {
             // We willen geen onnodige keyCodes sturen dus ff filteren
             if(allowedKeyCodes.indexOf(e.keyCode) > -1){
-                t.keyPress = e.keyCode;
+                t.keyPress[e.keyCode] = true;
             }
         },false);
         window.addEventListener("keyup",function (e) {
             // We willen geen onnodige keyCodes sturen dus ff filteren
             if(allowedKeyCodes.indexOf(e.keyCode) > -1){
-                t.keyPress = null;
+                delete t.keyPress[e.keyCode];
             }
         },false);
     }
