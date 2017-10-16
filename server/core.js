@@ -25,7 +25,6 @@ exports.Main = function(roomId, io, roomMaster){
     };
 
     this.updateGame = function(){
-
         this.io.sockets.in(this.roomId).emit("updateGame", {
             board: this.board.getGridData(),
             roomPlayers: this.board.getPlayers(),
@@ -54,132 +53,133 @@ exports.Main = function(roomId, io, roomMaster){
         if(!this.started) return;
         // console.log(playerId);
         var player = this.board.getPlayerById(playerId);
-        var playerPos = player.getPosition();
-        var movementBlocked = [-1, 1, 2, 25];
-
-        var globalSpeed = 4;
-        var maxBlockCollision = {
-            top: -40,
-            left: 0,
-            right: 10,
-            bottom: this.board.cellHeight-40,
-        };
-
-        var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
-        var playerPoints = player.getCollisionPoints();
-        switch (keyId){
-            case 87:
-            case 38:
-                // Up
-
-                player.setDirection(3);
-
-                var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y-1);
-
-                var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
-
-
-                if( ( blockPoints.bottomLeft.x < playerPoints.topLeft.x &&
-                      blockPoints.bottomRight.x > playerPoints.topRight.x &&
-                      movementBlocked.indexOf(moveToBlock) <= 0 ) ||
-                    currentBlock.y * 50 < playerPos.y-player.speed*globalSpeed + 40 ){
-                    player.setPosition(playerPos.x, playerPos.y -= player.speed*globalSpeed);
-                }
-                break;
-            case 65:
-            case 37:
-                // Left
-
-                player.setDirection(2);
-
-                var blockPoints = this.board.blockCollisions(currentBlock.x-1, currentBlock.y);
-
-                var moveToBlock = this.board.getBlock(currentBlock.x-1, currentBlock.y);
-
-                if( ( blockPoints.topRight.y < playerPoints.topLeft.y &&
-                        blockPoints.bottomRight.y > playerPoints.bottomLeft.y &&
-                        movementBlocked.indexOf(moveToBlock) <= 0 ) ||
-                    currentBlock.x * 50 < playerPos.x - player.speed*globalSpeed ){
-                    player.setPosition(playerPos.x -= player.speed*globalSpeed, playerPos.y);
-                }
-
-                break;
-            case 83:
-            case 40:
-                // Down
-                player.setDirection(1);
-                var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y+1);
-
-                var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
-
-
-                if( ( blockPoints.topLeft.x < playerPoints.bottomLeft.x &&
-                        blockPoints.topRight.x > playerPoints.bottomRight.x &&
-                        movementBlocked.indexOf(moveToBlock) <= 0 ) ||
-                    currentBlock.y * 50 < playerPos.y+player.speed*globalSpeed ){
-                    player.setPosition(playerPos.x, playerPos.y += player.speed*globalSpeed);
-                }
-                break;
-            case 68:    
-            case 39:
-                // Right
-                player.setDirection(4);
-                var blockPoints = this.board.blockCollisions(currentBlock.x+1, currentBlock.y);
-
-                var moveToBlock = this.board.getBlock(currentBlock.x+1, currentBlock.y);
-
-                if( ( blockPoints.topLeft.y < playerPoints.topRight.y &&
-                        blockPoints.bottomLeft.y > playerPoints.bottomRight.y &&
-                        movementBlocked.indexOf(moveToBlock) <= 0 ) ||
-                    currentBlock.x * 50 > playerPos.x - 5 ){
-                    player.setPosition(playerPos.x += player.speed*globalSpeed, playerPos.y);
-                }
-
-                break;
-            case 32:
-                // Spacebar - Place bomb and remove after 3 seconds.
-                if(player.placeBomb() != null){
-
-
-
-                    var gridCoords = this.board.getBlockXAndY(playerPos.x+20, playerPos.y+20);
-                    // 3,2,1,4
-                    // switch (player.getDirection()){
-                    //     case 3:
-                    //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y);
-                    //         gridCoords = this.board.getBlock(playerPos.x, playerPos.y);
-                    //     case 2:
-                    //         gridCoords = this.board.getGridFromCoords(playerPos.x-1, playerPos.y-1);
-                    //     case 1:
-                    //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y+1);
-                    //     case 4:
-                    //         gridCoords = this.board.getGridFromCoords(playerPos.x+1, playerPos.y);
-                    //
-                    // }
-                    // console.log(playerPos);
-                    console.log(gridCoords);
-
-                    var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
-                    this.board.grid[gridCoords.y][gridCoords.x] = 25;
-
-                    var board = this.board;
-                    var tempGame = this;
-                    var fireCells;
-
-                    setTimeout(function(){
-                        fireCells = board.spawnFire(gridCoords, playerId);
-                        tempGame.updateGame();
-                        // console.log(fireCells);
-
+        if(typeof player != 'undefined'){
+            var playerPos = player.getPosition();
+            var movementBlocked = [-1, 1, 2, 25];
+    
+            var globalSpeed = 4;
+            var maxBlockCollision = {
+                top: -40,
+                left: 0,
+                right: 10,
+                bottom: this.board.cellHeight-40,
+            };
+    
+            var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
+            var playerPoints = player.getCollisionPoints();
+            switch (keyId){
+                case 87:
+                case 38:
+                    // Up
+    
+                    player.setDirection(3);
+    
+                    var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y-1);
+    
+                    var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
+    
+    
+                    if( ( blockPoints.bottomLeft.x < playerPoints.topLeft.x &&
+                          blockPoints.bottomRight.x > playerPoints.topRight.x &&
+                          movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                        currentBlock.y * 50 < playerPos.y-player.speed*globalSpeed + 40 ){
+                        player.setPosition(playerPos.x, playerPos.y -= player.speed*globalSpeed);
+                    }
+                    break;
+                case 65:
+                case 37:
+                    // Left
+    
+                    player.setDirection(2);
+    
+                    var blockPoints = this.board.blockCollisions(currentBlock.x-1, currentBlock.y);
+    
+                    var moveToBlock = this.board.getBlock(currentBlock.x-1, currentBlock.y);
+    
+                    if( ( blockPoints.topRight.y < playerPoints.topLeft.y &&
+                            blockPoints.bottomRight.y > playerPoints.bottomLeft.y &&
+                            movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                        currentBlock.x * 50 < playerPos.x - player.speed*globalSpeed ){
+                        player.setPosition(playerPos.x -= player.speed*globalSpeed, playerPos.y);
+                    }
+    
+                    break;
+                case 83:
+                case 40:
+                    // Down
+                    player.setDirection(1);
+                    var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y+1);
+    
+                    var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
+    
+    
+                    if( ( blockPoints.topLeft.x < playerPoints.bottomLeft.x &&
+                            blockPoints.topRight.x > playerPoints.bottomRight.x &&
+                            movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                        currentBlock.y * 50 < playerPos.y+player.speed*globalSpeed ){
+                        player.setPosition(playerPos.x, playerPos.y += player.speed*globalSpeed);
+                    }
+                    break;
+                case 68:    
+                case 39:
+                    // Right
+                    player.setDirection(4);
+                    var blockPoints = this.board.blockCollisions(currentBlock.x+1, currentBlock.y);
+    
+                    var moveToBlock = this.board.getBlock(currentBlock.x+1, currentBlock.y);
+    
+                    if( ( blockPoints.topLeft.y < playerPoints.topRight.y &&
+                            blockPoints.bottomLeft.y > playerPoints.bottomRight.y &&
+                            movementBlocked.indexOf(moveToBlock) <= 0 ) ||
+                        currentBlock.x * 50 > playerPos.x - 5 ){
+                        player.setPosition(playerPos.x += player.speed*globalSpeed, playerPos.y);
+                    }
+    
+                    break;
+                case 32:
+                    // Spacebar - Place bomb and remove after 3 seconds.
+                    if(player.placeBomb() != null){
+    
+    
+    
+                        var gridCoords = this.board.getBlockXAndY(playerPos.x+20, playerPos.y+20);
+                        // 3,2,1,4
+                        // switch (player.getDirection()){
+                        //     case 3:
+                        //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y);
+                        //         gridCoords = this.board.getBlock(playerPos.x, playerPos.y);
+                        //     case 2:
+                        //         gridCoords = this.board.getGridFromCoords(playerPos.x-1, playerPos.y-1);
+                        //     case 1:
+                        //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y+1);
+                        //     case 4:
+                        //         gridCoords = this.board.getGridFromCoords(playerPos.x+1, playerPos.y);
+                        //
+                        // }
+                        // console.log(playerPos);
+                        console.log(gridCoords);
+    
+                        var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
+                        this.board.grid[gridCoords.y][gridCoords.x] = 25;
+    
+                        var board = this.board;
+                        var tempGame = this;
+                        var fireCells;
+    
                         setTimeout(function(){
-                            for(var i = 0; i < fireCells.length; i++){
-                                board.grid[fireCells[i].y][fireCells[i].x] = 0;
-                            }
+                            fireCells = board.spawnFire(gridCoords, playerId);
                             tempGame.updateGame();
-                        }, 1000);
-                    }, 3000);
-                }
-                break;
+    
+                            setTimeout(function(){
+                                for(var i = 0; i < fireCells.length; i++){
+                                    board.grid[fireCells[i].y][fireCells[i].x] = 0;
+                                }
+                                tempGame.updateGame();
+                            }, 1000);
+                        }, 3000);
+                    }
+                    break;
+            }
         }
 
         this.updateGame();
@@ -328,11 +328,6 @@ function Board(){
     };
 
     this.getBlockByCoords = function(x, y){
-
-
-
-
-
         return 0;
         realX = x + 20;
         realY = y + 45;
@@ -353,6 +348,22 @@ function Board(){
         return -1;
     }
 
+    this.playerDamager = function(fireCells){
+        for(var player in this.players){
+            var playerPos = this.players[player].getPosition();
+            var playerBlock = this.getBlockXAndY(playerPos.x, playerPos.y);
+            
+            for(var i = 0; i < fireCells.length; i++){
+                if(fireCells[i].x === playerBlock.x && fireCells[i].y === playerBlock.y){
+                    this.players[player].hit();
+                    if(this.players[player].isDead()){
+                        // TODO REMOVE PLAYER
+                        console.log(player + ' died.');
+                    }
+                }
+            }
+        }
+    }
 
     this.getPlayerView = function(){
         // this.players
@@ -380,22 +391,56 @@ function Board(){
         var fireCells = [{x: gridCoords.x, y: gridCoords.y}];
         this.grid[gridCoords.y][gridCoords.x] = 26;
 
-        // Needs rework to EXclude diagonal bombing LOL.
-        // Now it can through walls..
-        for(var i = -bombPower; i <= bombPower; i++){
-
-            if(this.grid[gridCoords.y][gridCoords.x+i] == 0 || this.grid[gridCoords.y][gridCoords.x+i] == 2){
-                fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
-                this.grid[gridCoords.y][gridCoords.x+i] = 26;
+        // Up
+        for(var i = 1; i <= bombPower; i++){
+            var blockType = this.grid[gridCoords.y-i][gridCoords.x];
+            if(typeof blockType !== 'undefined'){
+                if(blockType == 0 || blockType == 2){
+                    fireCells.push({x: gridCoords.x, y: gridCoords.y-i});
+                    this.grid[gridCoords.y-i][gridCoords.x] = 26;
+                }else{
+                    break;
+                }
             }
-            if( typeof  this.grid[gridCoords.y+i] !== 'undefined' && ( this.grid[gridCoords.y+i][gridCoords.x] == 0 || this.grid[gridCoords.y+i][gridCoords.x] == 2 ) ){
-                fireCells.push({x: gridCoords.x, y: gridCoords.y+i});
-                this.grid[gridCoords.y+i][gridCoords.x] = 26;
+        }
+        // Down
+        for(var i = 1; i <= bombPower; i++){
+            var blockType = this.grid[gridCoords.y+i][gridCoords.x];
+            if(typeof blockType !== 'undefined'){
+                if(blockType == 0 || blockType == 2){
+                    fireCells.push({x: gridCoords.x, y: gridCoords.y+i});
+                    this.grid[gridCoords.y+i][gridCoords.x] = 26;
+                }else{
+                    break;
+                }
+            }
+        }
+        // left
+        for(var i = 1; i <= bombPower; i++){
+            var blockType = this.grid[gridCoords.y][gridCoords.x-i];
+            if(typeof blockType !== 'undefined'){
+                if(blockType == 0 || blockType == 2){
+                    fireCells.push({x: gridCoords.x-i, y: gridCoords.y});
+                    this.grid[gridCoords.y][gridCoords.x-i] = 26;
+                }else{
+                    break;
+                }
+            }
+        }
+        // right
+        for(var i = 1; i <= bombPower; i++){
+            var blockType = this.grid[gridCoords.y][gridCoords.x+i];
+            if(typeof blockType !== 'undefined'){
+                if(blockType == 0 || blockType == 2){
+                    fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
+                    this.grid[gridCoords.y][gridCoords.x+i] = 26;
+                }else{
+                    break;
+                }
             }
         }
 
-
-
+        this.playerDamager(fireCells); // To check if players should be receiving damage at the explosion
         return fireCells;
     };
 
@@ -475,7 +520,10 @@ function Player(id, name){
     };
 
     this.hit = function(){
-
+        this.lives--;
+        if(this.lives === 0){
+            this.dead = true;
+        }
     };
 
     this.powerUp = function(type) {
@@ -496,6 +544,10 @@ function Player(id, name){
     this.setDirection = function(direction){
         this.direction = direction;
     };
+
+    this.isDead = function(){
+        return this.dead;
+    }
 
     this.getId = function(){
         return this.id;
