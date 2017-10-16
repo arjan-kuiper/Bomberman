@@ -365,7 +365,7 @@ function Board(){
                 if(fireCells[i].x === playerBlock.x && fireCells[i].y === playerBlock.y){
                     this.players[player].hit();
                     if(this.players[player].isDead()){
-                        this.deadPlayers.push(player);
+                        //this.deadPlayers.push(player);
                         console.log(player + ' died.');
                     }
                 }
