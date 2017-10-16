@@ -59,77 +59,42 @@ exports.Main = function(roomId, io, roomMaster){
 
         var globalSpeed = 4;
         var maxBlockCollision = {
-            top: -30,
+            top: -40,
             left: 0,
-            right: this.board.cellWidth,
-            bottom: this.board.cellHeight-30,
+            right: 10,
+            bottom: this.board.cellHeight-40,
         };
         var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
         switch (keyId){
             case 87:
             case 38:
                 // Up
-                //console.log(this.board.getRelativeBlock(player.xPosition, player.yPosition, 'up'));
-
-
-
                 var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
-
-                if( movementBlocked.indexOf(moveToBlock) <= 0 ||
-                    ( currentBlock.y * this.board.cellHeight + maxBlockCollision.top) < playerPos.y - player.speed*globalSpeed){
-                    player.goToPos(playerPos.x, playerPos.y -= player.speed*globalSpeed);
+                if( (playerPos.x ) % 50 < 7 && movementBlocked.indexOf(moveToBlock) <= 0 ||
+                    ( currentBlock.y * this.board.cellHeight + maxBlockCollision.top ) < playerPos.y - player.speed*globalSpeed ){
+                    player.setPosition(playerPos.x, playerPos.y -= player.speed*globalSpeed);
                 }
-
-
-                // var moveToBlock = this.board.getBlockByCoords(playerPos.x, playerPos.y - this.board.cellHeight);
-                // if(movementBlocked.indexOf(moveToBlock) <= 0){
-                //     player.goToPos(playerPos.x, playerPos.y -= player.speed*globalSpeed);
-                // }
                 break;
             case 65:
             case 37:
                 // Left
-
-
                 var moveToBlock = this.board.getBlock(currentBlock.x-1, currentBlock.y);
 
-                if( movementBlocked.indexOf(moveToBlock) <= 0 ||
+                if( (playerPos.y + 40) % 50 < 5 && movementBlocked.indexOf(moveToBlock) <= 0 ||
                     ( currentBlock.x * this.board.cellWidth + maxBlockCollision.left) < playerPos.x - player.speed*globalSpeed){
-                    player.goToPos(playerPos.x -= player.speed*globalSpeed, playerPos.y);
+                    player.setPosition(playerPos.x -= player.speed*globalSpeed, playerPos.y);
                 }
 
-
-
-                // var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
-                //
-                // if( movementBlocked.indexOf(moveToBlock) <= 0 ||
-                //     ( currentBlock.y * this.board.cellHeight + maxBlockCollision.top) < playerPos.y - player.speed*globalSpeed){
-                //     player.goToPos(playerPos.x, playerPos.y -= player.speed*globalSpeed);
-                // }
-
-                //
-                // var moveToBlock = this.board.getBlockByCoords(playerPos.x - this.board.cellWidth, playerPos.y);
-                // if(movementBlocked.indexOf(moveToBlock) <= 0){
-                //     player.goToPos(playerPos.x -= player.speed*globalSpeed, playerPos.y);
-                // }
                 break;
             case 83:
             case 40:
                 // Down
-
-
-
                 var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
 
-                if( movementBlocked.indexOf(moveToBlock) <= 0 ||
-                    ( currentBlock.y * this.board.cellHeight + maxBlockCollision.bottom) < playerPos.y + player.speed*globalSpeed){
-                    player.goToPos(playerPos.x, playerPos.y += player.speed*globalSpeed);
+                if( (playerPos.x ) % 50 < 7 && movementBlocked.indexOf(moveToBlock) <= 0 ||
+                    ( currentBlock.y * this.board.cellHeight + maxBlockCollision.bottom) < playerPos.y + player.speed*globalSpeed ){
+                    player.setPosition(playerPos.x, playerPos.y += player.speed*globalSpeed);
                 }
-                // var moveToBlock = this.board.getBlockByCoords(playerPos.x, playerPos.y + this.board.cellHeight);
-                // if(movementBlocked.indexOf(moveToBlock) <= 0){
-                //     player.goToPos(playerPos.x, playerPos.y += player.speed*globalSpeed);
-                // }
-                //
                 break;
             case 68:    
             case 39:
@@ -137,18 +102,11 @@ exports.Main = function(roomId, io, roomMaster){
 
                 var moveToBlock = this.board.getBlock(currentBlock.x+1, currentBlock.y);
 
-                if( movementBlocked.indexOf(moveToBlock) <= 0 ||
+                if( (playerPos.y + 40) % 50 < 5 && movementBlocked.indexOf(moveToBlock) <= 0 ||
                     ( currentBlock.x * this.board.cellWidth + maxBlockCollision.right) < playerPos.x + player.speed*globalSpeed){
-                    player.goToPos(playerPos.x += player.speed*globalSpeed, playerPos.y);
+                    player.setPosition(playerPos.x += player.speed*globalSpeed, playerPos.y);
                 }
 
-
-
-
-                // var moveToBlock = this.board.getBlockByCoords(playerPos.x + this.board.cellWidth, playerPos.y);
-                // if(movementBlocked.indexOf(moveToBlock) <= 0){
-                //     player.goToPos(playerPos.x += player.speed*globalSpeed, playerPos.y);
-                // }
                 break;
             case 32:
                 // Spacebar - Place bomb and remove after 3 seconds.
@@ -315,12 +273,13 @@ function Board(){
         // var blockX =
         // var blockY =
         return {
-            x: parseInt(x/this.cellWidth),
+            x: parseInt((x)/this.cellWidth),
             y: parseInt((y+40)/this.cellHeight)
         };
     };
     this.getBlock = function(x,y){
-        return this.grid[x][y];
+
+        return this.grid[y][x];
     };
 
     this.getBlockByCoords = function(x, y){
@@ -433,34 +392,7 @@ function Player(id, name){
     };
 
     this.getPosition = function(){
-        if(this.positionToGoTo.time !== null){
-            if(Date.now() - this.positionToGoTo.time < (2 - this.speed)*1000){
-                // if(Date.now() - this.positionToGoTo.time > 100){
-                //     this.positionToGoTo.time = null;
-                // }
-                var stepSizeX = (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 );
-                //
-                console.log( "-----");
-                // console.log( this.positionToGoTo.x);
-                // console.log(  this.oldPosition.x );
-                // console.log( stepSizeX );
-                // console.log( (Date.now() - this.positionToGoTo.time) );
-                // console.log( stepSizeX / (Date.now() - this.positionToGoTo.time) );
-                console.log( ( (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
-                // console.log( (Date.now() - this.positionToGoTo.time) );
-                // console.log( ( (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
-                this.xPosition = this.oldPosition.x + ( ( (this.positionToGoTo.x - this.oldPosition.x) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
-                this.yPosition = this.oldPosition.y + ( ( (this.positionToGoTo.y - this.oldPosition.y) / ( (2 - this.speed) * 1000 ) ) * (Date.now() - this.positionToGoTo.time) );
-            }else{
-                this.positionToGoTo.time = null;
-            }
-        }
         return {x: this.xPosition, y: this.yPosition};
-    };
-    this.goToPos = function(x, y){
-        this.setPosition(x, y);
-        // this.positionToGoTo = {x: x, y: y, time: Date.now()};
-        // this.oldPosition = {x: this.xPosition, y: this.yPosition};
     };
 
     this.setPosition = function(x, y){
