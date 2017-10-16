@@ -199,15 +199,23 @@ class Board{
                     if(key === "side"){
                         this.playerSprites[i].right[j] = img;
 
-                        let c = document.createElement('canvas');
-                            c.width = img.width;
-                            c.height = img.height;
-                        let ctx = c.getContext('2d');
-                            ctx.translate(img.width, 0);
-                            ctx.scale(-1, 1);
-                            ctx.drawImage(img, 0, 0);
+                        let t = this;
+                        img.onload = function(){
+                            let c = document.createElement('canvas');
+                                c.width = img.width;
+                                c.height = img.height;
+                            let ctx = c.getContext('2d');
+                                ctx.translate(img.width, 0);
+                                ctx.scale(-1, 1);
+                                ctx.drawImage(img, 0, 0, img.width, img.height);
+                                t.playerSprites[i].left[j] = c;
 
-                        this.playerSprites[i].left[j] = c;
+                            imagesToLoad--;
+                            if (imagesToLoad === 0) {
+                                callback();
+                            }
+                        };
+
                     }else{
                         this.playerSprites[i][key][j] = img;
                     }
