@@ -1,7 +1,7 @@
 class Main{
-    constructor(){
+    constructor(playerName){
         this.network = new Network();
-        this.board = new Board();
+        this.board = new Board(playerName);
 
         let thisBoard = this.board;
         this.network.getMessage(function(data){
@@ -62,7 +62,7 @@ class Network{
 }
 
 class Board{
-    constructor(){
+    constructor(playerName){
 
         // Aantal tiles in de breedte en hoogte
         // Mooie waardes: 7, 8, 13, 14, 19, 20
@@ -81,6 +81,7 @@ class Board{
         this.playersCanvas = this.createCanvas();
         this.playersCanvas.id = "players";
         this.playersCtx = this.playersCanvas.getContext("2d");
+        this.playerName = playerName;
 
         this.board = [];
         this.environmentSprites = {
@@ -273,7 +274,7 @@ class Board{
                 this.playersCtx.font = "20px Arial";
                 this.playersCtx.fillStyle = "white";
                 this.playersCtx.textAlign = "center";
-                this.playersCtx.fillText("Name",(this.playerView[key].x + 20),this.playerView[key].y);
+                this.playersCtx.fillText(this.playerName,(this.playerView[key].x + 20),this.playerView[key].y);
 
                 // New player animation image
                 this.playerView[key].num++;
@@ -347,8 +348,12 @@ class AudioManager{
 
 }
 
-// Code to initialize everything
-let main = new Main();
+// Code to initialize everything with playername
+let playerName = prompt("Please enter a nickname");
+while(playerName == "" || playerName == null){
+    playerName = prompt("Please enter a nickname");
+}
+let main = new Main(playerName);
 
 
 Object.size = function(obj) {

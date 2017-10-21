@@ -389,7 +389,7 @@ function Board(){
     };
 
     this.spawnFire = function(gridCoords, id){
-        // Check if the player who placed the bomb is still connected
+        // Check if the player who placed the bomb is still connected, otherwise return only the start coords.
         if(typeof this.getPlayerById(id) == 'undefined') return fireCells = [{x: gridCoords.x, y: gridCoords.y}];
 
         var bombPower = this.getPlayerById(id).getBombPower();
