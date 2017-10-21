@@ -255,9 +255,7 @@ class Board{
 
             // Loop through players
             for (let key in this.playerView) {
-
                 if (!this.playerView.hasOwnProperty(key)) continue;
-
                 // Draw player
                 this.playersCtx.drawImage(
                     this.playerSprites[this.playerView[key].playerNumber][this.playerView[key].direction][this.playerView[key].num], // Image
@@ -271,7 +269,6 @@ class Board{
                     this.playerView[key].h); // Player height on board
                 
                 // Draw the playername\
-                
 
                 this.playersCtx.font = "20px Arial";
                 this.playersCtx.fillStyle = "white";

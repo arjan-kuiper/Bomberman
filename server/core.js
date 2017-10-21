@@ -389,6 +389,9 @@ function Board(){
     };
 
     this.spawnFire = function(gridCoords, id){
+        // Check if the player who placed the bomb is still connected
+        if(typeof this.getPlayerById(id) == 'undefined') return fireCells = [{x: gridCoords.x, y: gridCoords.y}];
+
         var bombPower = this.getPlayerById(id).getBombPower();
         var fireCells = [{x: gridCoords.x, y: gridCoords.y}];
         this.grid[gridCoords.y][gridCoords.x] = 26;
