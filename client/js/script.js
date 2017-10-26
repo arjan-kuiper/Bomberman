@@ -31,7 +31,7 @@ class Main{
             // We willen geen onnodige keyCodes sturen dus ff filteren
             if(allowedKeyCodes.indexOf(e.keyCode) > -1){
                 if(e.keyCode === 32){
-                    t.network.sendMessage({func: "keyHandle", key: 32});
+                    t.placeBomb();
                 }else{
                     t.keyPress[e.keyCode] = true;
                 }
@@ -43,6 +43,9 @@ class Main{
                 delete t.keyPress[e.keyCode];
             }
         },false);
+    }
+    placeBomb(){
+        this.network.sendMessage({func: "keyHandle", key: 32});
     }
 }
 
