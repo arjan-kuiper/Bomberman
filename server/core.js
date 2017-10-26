@@ -118,9 +118,10 @@ exports.Main = function(roomId, io, roomMaster){
         this.started = true;
         if(!this.started) return;
         var player = this.board.getPlayerById(playerId);
+        if(player.isDead()) return;
         if(typeof player != 'undefined'){
             var playerPos = player.getPosition();
-            var movementBlocked = [-1, 1, 2, 25];
+            var movementBlocked = [-1, 1, 2, 21, 22, 23];
     
             var globalSpeed = 4;
             var maxBlockCollision = {
@@ -211,7 +212,7 @@ exports.Main = function(roomId, io, roomMaster){
     
                         var gridCoords = this.board.getBlockXAndY(playerPos.x+20, playerPos.y+20);
                         var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
-                        this.board.grid[gridCoords.y][gridCoords.x] = 23;
+                        this.board.grid[gridCoords.y][gridCoords.x] = 21;
 
     
                         var board = this.board;
@@ -241,9 +242,9 @@ exports.Main = function(roomId, io, roomMaster){
                                         }, 1000);
 
                                 }, 600);
-                                tempGame.board.grid[gridCoords.y][gridCoords.x] = 25;
+                                tempGame.board.grid[gridCoords.y][gridCoords.x] = 23;
                             }, 600);
-                            tempGame.board.grid[gridCoords.y][gridCoords.x] = 24;
+                            tempGame.board.grid[gridCoords.y][gridCoords.x] = 22;
                         }, 600);
 
 
@@ -472,7 +473,7 @@ function Board(){
 
         var bombPower = this.getPlayerById(id).getBombPower();
         var fireCells = [{x: gridCoords.x, y: gridCoords.y}];
-        this.grid[gridCoords.y][gridCoords.x] = 26;
+        this.grid[gridCoords.y][gridCoords.x] = 24;
 
         // Up
         for(var i = 1; i <= bombPower; i++){
@@ -528,8 +529,8 @@ function Board(){
         var blockType = this.grid[gridCoords.y][gridCoords.x];
         if(typeof blockType !== 'undefined'){
             if(blockType !== 1){
-                this.grid[gridCoords.y][gridCoords.x] = 26;
-                if(blockType >= 23 && blockType <= 25){
+                this.grid[gridCoords.y][gridCoords.x] = 25;
+                if(blockType >= 21 && blockType <= 23){
                     // Explode bomb of other
                     this.otherBomb(gridCoords);
                 }

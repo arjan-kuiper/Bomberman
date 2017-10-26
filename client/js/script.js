@@ -1,7 +1,7 @@
 class Main{
-    constructor(playerName){
+    constructor(playerName, audioManager){
         this.network = new Network();
-        this.board = new Board();
+        this.board = new Board(audioManager);
         this.network.sendMessage({func: "join", name: playerName});
 
         let thisBoard = this.board;
@@ -64,7 +64,7 @@ class Network{
 }
 
 class Board{
-    constructor(){
+    constructor(audioManager){
 
         // Aantal tiles in de breedte en hoogte
         // Mooie waardes: 7, 8, 13, 14, 19, 20
@@ -84,6 +84,8 @@ class Board{
         this.playersCanvas.id = "players";
         this.playersCtx = this.playersCanvas.getContext("2d");
 
+        this.audioManager = audioManager;
+        this.audioManager.playingBGM();
         this.board = [];
         this.environmentSprites = {
             0: "Blocks/BackgroundTile.png",
@@ -93,15 +95,16 @@ class Board{
             11: "Powerups/FlamePowerup.png",
             12: "Powerups/SpeedPowerup.png",
 
-            23: "Bomb/Bomb_f01.png",
-            24: "Bomb/Bomb_f02.png",
-            25: "Bomb/Bomb_f03.png",
+            21: "Bomb/Bomb_f01.png",
+            22: "Bomb/Bomb_f02.png",
+            23: "Bomb/Bomb_f03.png",
 
-            26: "Flame/Flame_f00.png",
-            27: "Flame/Flame_f01.png",
-            28: "Flame/Flame_f02.png",
-            29: "Flame/Flame_f03.png",
-            30: "Flame/Flame_f04.png",
+            24: "Flame/Flame_f02.png",
+            25: "Flame/Flame_f00.png",
+            26: "Flame/Flame_f01.png",
+            27: "Flame/Flame_f02.png",
+            28: "Flame/Flame_f03.png",
+            29: "Flame/Flame_f04.png",
         };
         this.playerSprites = {
             1: { front: [], back: [], left: [], right: [] },
@@ -129,6 +132,9 @@ class Board{
             // 4: {direction: "left", num: 0,x: this.cellWidth*(this.width-2) + 5, y: this.cellHeight*(this.height-2) - 30, w: this.cellWidth-10, h: 128 / 64 * (this.cellWidth-10)},
         };
         this.playerNumbers = {};
+
+        this.bombs = [];
+
 
         // Laad alle afbeelding van te voren.
         let t = this;
@@ -238,9 +244,28 @@ class Board{
      * Print het bord op de canvas
      */
     drawBoard(){
+        let bombs = this.bombs;
         if(this.board.length > 0){
             for(let y=0; y < this.height ;y++){
                 for(let x=0; x < this.width ;x++){
+                    if(this.board[y][x] === 24){
+
+                        let explode = true;
+                        for(let i=0; i< this.bombs.length;i++){
+                            if(this.bombs[i] === x + "-" + y){
+                                explode = false;
+                            }
+                        }
+
+                        if(explode){
+                            this.audioManager.explode(x + "-" + y);
+                            this.bombs[this.bombs.length] = x + "-" + y;
+                        }
+
+                        // Play bomb sound
+                    }else if(this.bombs.indexOf( x + "-" + y) > -1){
+                        delete this.bombs[this.bombs.indexOf( x + "-" + y)];
+                    }
                     this.ctx.drawImage(this.environmentSprites[this.board[y][x]], x*this.cellWidth, y*this.cellHeight, this.cellWidth, this.cellHeight);
                 }
             }
@@ -360,17 +385,57 @@ class Board{
 }
 
 class AudioManager{
+    constructor (){
+        this.sounds = {
+            bombSound: new Audio('client/sounds/bomb/bomb1.mp3'),
+            playingBGM: new Audio('client/sounds/background/rld.mp3'),
+        };
+
+        this.bombSounds = {};
+    }
+
+    explode(id){
+        if( typeof this.bombSounds[id] !== 'undefined'){
+            return;
+        }
+        console.log(id);
+        this.bombSounds[id] = this.sounds['bombSound'].cloneNode();
+        this.bombSounds[id].dataset.id = id;
+        let bombSounds = this.bombSounds;
+        this.bombSounds[id].addEventListener("ended", function(){
+            delete bombSounds[this.dataset.id];
+        });
+        this.bombSounds[id].play();
+        // this.bombSounds[id].play();
+        // this.bombSound.play();
+    }
+    playingBGM(){
+        let bgm = this.sounds['playingBGM'];
+        // setInterval(function(){
+        //     if(bgm.currentTime >= 64){
+        //         // bgm.currentTime = 1.32;
+        //         bgm.currentTime = 3.24;
+        //     }
+        // },1000);
+        bgm.play();
+        bgm.loop = true;
+
+        // bgm.currentTime = 63;
+    }
 
 }
+
+
+let am = new AudioManager();
 
 // Code to initialize everything with playername
 let playerName = prompt("Please enter a nickname");
 while(playerName == "" || playerName == null){
     playerName = prompt("Please enter a nickname");
 }
-let main = new Main(playerName);
 
 
+let main = new Main(playerName, am);
 Object.size = function(obj) {
     let size = 0, key;
     for (key in obj) {
