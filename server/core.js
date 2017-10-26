@@ -118,7 +118,7 @@ exports.Main = function(roomId, io, roomMaster){
         this.started = true;
         if(!this.started) return;
         var player = this.board.getPlayerById(playerId);
-        if(player.isDead()) return;
+        if(typeof player == 'undefined' || player.isDead()) return;
         if(typeof player != 'undefined'){
             var playerPos = player.getPosition();
             var movementBlocked = [-1, 1, 2, 21, 22, 23];
@@ -132,6 +132,13 @@ exports.Main = function(roomId, io, roomMaster){
             };
     
             var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
+            // Do a quick check to see if the player is CURRENTLY on a powerup
+            var powerups = [10, 11, 12];
+            if(powerups.indexOf(this.board.getBlock(currentBlock.x, currentBlock.y)) > -1){
+                player.powerUp(this.board.getBlock(currentBlock.x, currentBlock.y));
+                this.board.grid[currentBlock.y][currentBlock.x] = 0;
+            }
+
             var playerPoints = player.getCollisionPoints();
             switch (keyId){
                 case 87:
@@ -237,7 +244,15 @@ exports.Main = function(roomId, io, roomMaster){
 
                                         setTimeout(function(){
                                             for(var i = 0; i < fireCells.length; i++) {
-                                                board.grid[fireCells[i].y][fireCells[i].x] = 0;
+                                                // 10 - Extra bomb
+                                                // 11 - Extra bomb power
+                                                // 12 - Faster player movement
+                                                var powerups = [10, 11, 12];
+
+                                                // Prevent powerups from being overwritten again
+                                                if(powerups.indexOf(board.getBlock(fireCells[i].x, fireCells[i].y)) < 0){
+                                                    board.grid[fireCells[i].y][fireCells[i].x] = 0;
+                                                }
                                             }
                                         }, 1000);
 
@@ -525,7 +540,6 @@ function Board(){
         return fireCells;
     };
     this.handleGridFire = function(gridCoords) {
-
         var blockType = this.grid[gridCoords.y][gridCoords.x];
         if(typeof blockType !== 'undefined'){
             if(blockType !== 1){
@@ -534,17 +548,18 @@ function Board(){
                     // Explode bomb of other
                     this.otherBomb(gridCoords);
                 }
-                if(blockType === 2) return 2;
+                if(blockType === 2){
+                    this.spawnRandomPowerup(gridCoords);
+                    return 2;
+                } 
                 return 1;
             }else{
                 return 0;
             }
         }
 
-
     };
     this.otherBomb = function(gridCoords){
-
         // Explode bomb of other
         var otherFireCells = this.spawnFire(gridCoords, this.bombs[gridCoords.y][gridCoords.x]);
         this.bombs[gridCoords.y][gridCoords.x] = false;
@@ -555,6 +570,20 @@ function Board(){
             }
         }, 1000);
     };
+
+    this.spawnRandomPowerup = function(gridCoords){
+        // 10 - Extra bomb
+        // 11 - Extra bomb power
+        // 12 - Faster player movement
+        var powerups = [10, 11, 12];
+
+        // Lets first see if a powerup should spawn at all (50% chance)
+        var spawnChance = Math.random();
+        if(spawnChance <= 0.5){
+            var randomPowerup = Math.floor(Math.random() * powerups.length);
+            this.grid[gridCoords.y][gridCoords.x] = powerups[randomPowerup];
+        }
+    }
 
     this.blockCollisions = function(x, y){
         return {
@@ -639,7 +668,23 @@ function Player(id, name){
     };
 
     this.powerUp = function(type) {
+        switch(type){
+            case 10:
+                this.bombs.push(new Bomb());
+                console.log('Bomb +1');
+                break;
+            case 11:
+                for(var i = 0; i < this.bombs.length; i++){
+                    this.bombs[i].morePower();
+                }
+                console.log('Bombpower +1');
+                break;
 
+            case 12:
+                this.speed += 0.1;
+                console.log('Speed +1');
+                break;
+        }
     };
 
     this.getPosition = function(){
