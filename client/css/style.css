@@ -7,7 +7,7 @@ html, body{
     height: 100%;
     overflow: hidden;
     background-image: url('../images/game-background.jpeg');
-    background-size: 100% 100%;
+    background-size: cover;
     background-repeat: no-repeat;
 }
 #main{
