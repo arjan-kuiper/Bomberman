@@ -19,11 +19,8 @@ class Main{
 
         let t = this;
         this.keySend = setInterval(function(){
-
-            for(let k in t.keyPress){
-                t.network.sendMessage({func: "keyHandle", key: parseInt(k)});
-            }
-        },17);
+            t.network.sendMessage({func: "keyHandle", key: t.keyPress});
+        },50/3);
     }
 
     setupListener(){

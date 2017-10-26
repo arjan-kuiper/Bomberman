@@ -25,6 +25,30 @@ exports.Main = function(roomId, io, roomMaster){
     };
 
     this.updateGame = function(){
+        for(var playerId in this.walkingPlayers){
+            if(!this.walkingPlayers.hasOwnProperty(playerId)) continue;
+
+
+            if(this.walkingPlayers[playerId].up === true){
+                this.keyHandle(38, playerId);
+            }
+            if(this.walkingPlayers[playerId].left === true) {
+                this.keyHandle(37, playerId);
+            }
+            if(this.walkingPlayers[playerId].down === true) {
+                this.keyHandle(40, playerId);
+            }
+            if(this.walkingPlayers[playerId].right === true) {
+                this.keyHandle(39, playerId);
+            }
+            if(this.walkingPlayers[playerId].spacebar === true) {
+                this.keyHandle(32, playerId);
+            }
+
+
+
+        }
+
         // Send the update info
         this.io.sockets.in(this.roomId).emit("updateGame", {
             board: this.board.getGridData(),
@@ -46,13 +70,56 @@ exports.Main = function(roomId, io, roomMaster){
         this.updateGame();
     };
 
+
+
+
+    this.walkingPlayers = {};
+    this.setKeys = function(keys, playerId){
+        this.walkingPlayers[playerId] = {up: false, left: false, down: false, right: false, spacebar: false};
+
+
+        for(var key in keys){
+            if(!keys.hasOwnProperty(key)) continue;
+
+            switch (parseInt(key)){
+                case 87:
+                case 38:
+                    // Up
+                    this.walkingPlayers[playerId].up = true;
+                    break;
+                case 65:
+                case 37:
+                    // Left
+                    this.walkingPlayers[playerId].left = true;
+                    break;
+                case 83:
+                case 40:
+                    // Down
+                    this.walkingPlayers[playerId].down = true;
+                    break;
+                case 68:
+                case 39:
+                    // Right
+                    this.walkingPlayers[playerId].right = true;
+                    break;
+                case 32:
+                    // Spacebar - Place bomb and remove after 3 seconds.
+                    this.walkingPlayers[playerId].spacebar = true;
+                    break;
+            }
+        }
+
+    };
+
+
+
+
     this.keyHandle = function(keyId, playerId){
         // WASD: 87, 65, 83, 68
         // Pijltjes zelfde volgorde: 38, 37, 40, 39
         // Spatie: 32
         this.started = true;
         if(!this.started) return;
-        // console.log(playerId);
         var player = this.board.getPlayerById(playerId);
         if(typeof player != 'undefined'){
             var playerPos = player.getPosition();
@@ -144,22 +211,6 @@ exports.Main = function(roomId, io, roomMaster){
     
     
                         var gridCoords = this.board.getBlockXAndY(playerPos.x+20, playerPos.y+20);
-                        // 3,2,1,4
-                        // switch (player.getDirection()){
-                        //     case 3:
-                        //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y);
-                        //         gridCoords = this.board.getBlock(playerPos.x, playerPos.y);
-                        //     case 2:
-                        //         gridCoords = this.board.getGridFromCoords(playerPos.x-1, playerPos.y-1);
-                        //     case 1:
-                        //         gridCoords = this.board.getGridFromCoords(playerPos.x, playerPos.y+1);
-                        //     case 4:
-                        //         gridCoords = this.board.getGridFromCoords(playerPos.x+1, playerPos.y);
-                        //
-                        // }
-                        // console.log(playerPos);
-                        console.log(gridCoords);
-    
                         var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
                         this.board.grid[gridCoords.y][gridCoords.x] = 25;
     
@@ -169,21 +220,17 @@ exports.Main = function(roomId, io, roomMaster){
     
                         setTimeout(function(){
                             fireCells = board.spawnFire(gridCoords, playerId);
-                            tempGame.updateGame();
     
                             setTimeout(function(){
-                                for(var i = 0; i < fireCells.length; i++){
+                                for(var i = 0; i < fireCells.length; i++) {
                                     board.grid[fireCells[i].y][fireCells[i].x] = 0;
                                 }
-                                tempGame.updateGame();
                             }, 1000);
                         }, 3000);
                     }
                     break;
             }
         }
-
-        this.updateGame();
     };
 
 
@@ -348,7 +395,7 @@ function Board(){
         }
 
         return -1;
-    }
+    };
 
     this.playerDamager = function(fireCells){
         for(var player in this.players){
@@ -365,7 +412,7 @@ function Board(){
                 }
             }
         }
-    }
+    };
 
     this.getPlayerView = function(){
         // this.players
