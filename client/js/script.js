@@ -29,7 +29,11 @@ class Main{
         window.addEventListener("keydown",function (e) {
             // We willen geen onnodige keyCodes sturen dus ff filteren
             if(allowedKeyCodes.indexOf(e.keyCode) > -1){
-                t.keyPress[e.keyCode] = true;
+                if(e.keyCode === 32){
+                    t.network.sendMessage({func: "keyHandle", key: 32});
+                }else{
+                    t.keyPress[e.keyCode] = true;
+                }
             }
         },false);
         window.addEventListener("keyup",function (e) {
@@ -88,8 +92,16 @@ class Board{
             10: "Powerups/BombPowerup.png",
             11: "Powerups/FlamePowerup.png",
             12: "Powerups/SpeedPowerup.png",
-            25: "Bomb/Bomb_f02.png",
-            26: "Flame/Flame_f02.png"
+
+            23: "Bomb/Bomb_f01.png",
+            24: "Bomb/Bomb_f02.png",
+            25: "Bomb/Bomb_f03.png",
+
+            26: "Flame/Flame_f00.png",
+            27: "Flame/Flame_f01.png",
+            28: "Flame/Flame_f02.png",
+            29: "Flame/Flame_f03.png",
+            30: "Flame/Flame_f04.png",
         };
         this.playerSprites = {
             1: { front: [], back: [], left: [], right: [] },

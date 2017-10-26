@@ -70,7 +70,13 @@ function setupSocketListeners(roomId){
                     break;
                 case "keyHandle":
                     // console.log('(' + socket.id + ') KeyCode: ' + data.key);
-                    rooms[socketRooms[socket.id]].main.setKeys(data.key, socket.id);
+                    if(typeof data.key === "number"){
+                        if(data.key === 32){
+                            rooms[socketRooms[socket.id]].main.keyHandle(32, socket.id);
+                        }
+                    }else{
+                        rooms[socketRooms[socket.id]].main.setKeys(data.key, socket.id);
+                    }
 
                     break;
             }
