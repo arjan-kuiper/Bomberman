@@ -12,10 +12,13 @@ exports.Main = function(roomId, io, roomMaster){
 
     this.createGame = function () {
         this.board.createBoard();
-        this.board.addPlayer(roomMaster, 'Player 1');
+        this.board.addPlayer(roomMaster, '');
     };
     this.addPlayer = function(id, name) {
-            this.board.addPlayer(id, name);
+        this.board.addPlayer(id, name);
+    };
+    this.setPlayerName = function (id, name){
+        this.board.setPlayerName(id, name);
     };
 
     this.removePlayer = function(id){
@@ -289,6 +292,10 @@ function Board(){
         }
     };
 
+    this.setPlayerName = function (id, name){
+        this.players[id].name = name;
+    };
+
     this.removePlayer = function(id){
         if(typeof this.players[id] !== 'undefined'){
             this.playerNumbers[this.playerNumbers.length] = this.players[id].getNumber();
@@ -425,10 +432,10 @@ function Board(){
             for(var i = 0; i < fireCells.length; i++){
                 if(fireCells[i].x === playerBlock.x && fireCells[i].y === playerBlock.y){
                     this.players[player].hit();
-                    if(this.players[player].isDead()){
-                        //this.deadPlayers.push(player);
-                        console.log(player + ' died.');
-                    }
+                    // if(this.players[player].isDead()){
+                    //     this.deadPlayers.push(player);
+                    //     console.log(player + ' died.');
+                    // }
                 }
             }
         }
@@ -448,7 +455,9 @@ function Board(){
                 direction: [null,'front', 'left','back','right'][player.getDirection()],
                 x: pos.x,
                 y: pos.y,
-                playerNumber: player.getNumber()
+                playerNumber: player.getNumber(),
+                lives: player.lives,
+                name: player.name
             };
 
         }
@@ -465,76 +474,71 @@ function Board(){
 
         // Up
         for(var i = 1; i <= bombPower; i++){
-            var blockType = this.grid[gridCoords.y-i][gridCoords.x];
-            if(typeof blockType !== 'undefined'){
-                if(blockType != 1){
-                    fireCells.push({x: gridCoords.x, y: gridCoords.y-i});
-                    this.grid[gridCoords.y-i][gridCoords.x] = 26;
-                    if(blockType >= 23 && blockType <= 25){
-                        // Explode bomb of other
-                        this.otherBomb({y: gridCoords.y-i,x: gridCoords.x});
-                    }
-                    if(blockType == 2) break;
-                }else{
-                    break;
-                }
+
+            var handler = this.handleGridFire({y: gridCoords.y-i,x: gridCoords.x});
+            if(handler !== 0){
+                fireCells.push({y: gridCoords.y-i,x: gridCoords.x});
+                if(handler === 2) break;
+            }else{
+                break;
             }
         }
         // Down
         for(var i = 1; i <= bombPower; i++){
-            var blockType = this.grid[gridCoords.y+i][gridCoords.x];
-            if(typeof blockType !== 'undefined'){
-                if(blockType != 1){
-                    fireCells.push({x: gridCoords.x, y: gridCoords.y+i});
-                    this.grid[gridCoords.y+i][gridCoords.x] = 26;
-                    if(blockType >= 23 && blockType <= 25){
-                        // Explode bomb of other
-                        this.otherBomb({y: gridCoords.y+i,x: gridCoords.x});
-                    }
-                    if(blockType == 2) break;
-                }else{
-                    break;
-                }
+
+            var handler = this.handleGridFire({y: gridCoords.y+i,x: gridCoords.x});
+            if(handler !== 0){
+                fireCells.push({y: gridCoords.y+i,x: gridCoords.x});
+                if(handler === 2) break;
+            }else{
+                break;
             }
+
         }
         // left
         for(var i = 1; i <= bombPower; i++){
-            var blockType = this.grid[gridCoords.y][gridCoords.x-i];
-            if(typeof blockType !== 'undefined'){
-                if(blockType != 1){
-                    fireCells.push({x: gridCoords.x-i, y: gridCoords.y});
-                    this.grid[gridCoords.y][gridCoords.x-i] = 26;
 
-                    if(blockType >= 23 && blockType <= 25){
-                        // Explode bomb of other
-                        this.otherBomb({y: gridCoords.y,x: gridCoords.x-i});
-                    }
-                    if(blockType == 2) break;
-                }else{
-                    break;
-                }
+            var handler = this.handleGridFire({y: gridCoords.y,x: gridCoords.x-i});
+            if(handler !== 0){
+                fireCells.push({y: gridCoords.y,x: gridCoords.x-i});
+                if(handler === 2) break;
+            }else{
+                break;
             }
         }
         // right
         for(var i = 1; i <= bombPower; i++){
-            var blockType = this.grid[gridCoords.y][gridCoords.x+i];
-            if(typeof blockType !== 'undefined'){
-                if(blockType != 1){
-                    fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
-                    this.grid[gridCoords.y][gridCoords.x+i] = 26;
-                    if(blockType >= 23 && blockType <= 25){
-                        // Explode bomb of other
-                        this.otherBomb({y: gridCoords.y,x: gridCoords.x+i});
-                    }
-                    if(blockType == 2) break;
-                }else{
-                    break;
-                }
+            var handler = this.handleGridFire({y: gridCoords.y, x: gridCoords.x+i});
+            if(handler !== 0){
+                fireCells.push({x: gridCoords.x+i, y: gridCoords.y});
+                if(handler === 2) break;
+            }else{
+                break;
             }
+
         }
 
         this.playerDamager(fireCells); // To check if players should be receiving damage at the explosion
         return fireCells;
+    };
+    this.handleGridFire = function(gridCoords) {
+
+        var blockType = this.grid[gridCoords.y][gridCoords.x];
+        if(typeof blockType !== 'undefined'){
+            if(blockType !== 1){
+                this.grid[gridCoords.y][gridCoords.x] = 26;
+                if(blockType >= 23 && blockType <= 25){
+                    // Explode bomb of other
+                    this.otherBomb(gridCoords);
+                }
+                if(blockType === 2) return 2;
+                return 1;
+            }else{
+                return 0;
+            }
+        }
+
+
     };
     this.otherBomb = function(gridCoords){
 
@@ -578,7 +582,7 @@ function Player(id, name){
     this.xPosition = null;
     this.yPosition = null;
     this.lives = 3;
-    this.bombs = [new Bomb(),new Bomb()];
+    this.bombs = [new Bomb()];
     this.step = 50;
     this.speed = 1;
     this.dead = false;
@@ -652,7 +656,7 @@ function Player(id, name){
 
     this.isDead = function(){
         return this.dead;
-    }
+    };
 
     this.getId = function(){
         return this.id;

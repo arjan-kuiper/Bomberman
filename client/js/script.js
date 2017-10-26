@@ -1,7 +1,8 @@
 class Main{
     constructor(playerName){
         this.network = new Network();
-        this.board = new Board(playerName);
+        this.board = new Board();
+        this.network.sendMessage({func: "join", name: playerName});
 
         let thisBoard = this.board;
         this.network.getMessage(function(data){
@@ -63,7 +64,7 @@ class Network{
 }
 
 class Board{
-    constructor(playerName){
+    constructor(){
 
         // Aantal tiles in de breedte en hoogte
         // Mooie waardes: 7, 8, 13, 14, 19, 20
@@ -82,7 +83,6 @@ class Board{
         this.playersCanvas = this.createCanvas();
         this.playersCanvas.id = "players";
         this.playersCtx = this.playersCanvas.getContext("2d");
-        this.playerName = playerName;
 
         this.board = [];
         this.environmentSprites = {
@@ -266,6 +266,8 @@ class Board{
             // Loop through players
             for (let key in this.playerView) {
                 if (!this.playerView.hasOwnProperty(key)) continue;
+
+                if(this.playerView[key].lives === 0) continue;
                 // Draw player
                 this.playersCtx.drawImage(
                     this.playerSprites[this.playerView[key].playerNumber][this.playerView[key].direction][this.playerView[key].num], // Image
@@ -283,7 +285,7 @@ class Board{
                 this.playersCtx.font = "20px Arial";
                 this.playersCtx.fillStyle = "white";
                 this.playersCtx.textAlign = "center";
-                this.playersCtx.fillText(this.playerName,(this.playerView[key].x + 20),this.playerView[key].y);
+                this.playersCtx.fillText(this.playerView[key].name,(this.playerView[key].x + 20),this.playerView[key].y);
 
                 // New player animation image
                 this.playerView[key].num++;
@@ -310,7 +312,7 @@ class Board{
             }
 
             if(typeof this.playerView[playerId] === 'undefined'){
-                console.log(data[playerId].x + "," + data[playerId].y);
+                // console.log(data[playerId].x + "," + data[playerId].y);
 
                 this.playerView[playerId] = {
                     direction: data[playerId].direction,
@@ -319,7 +321,9 @@ class Board{
                     num: 0,
                     w: this.cellWidth-10,
                     h: 128 / 64 * (this.cellWidth-10),
-                    playerNumber: data[playerId].playerNumber
+                    playerNumber: data[playerId].playerNumber,
+                    lives: 3,
+                    name: ''
                 };
                 this.playerNumbers[playerId] = Object.size(this.playerView);
             }
@@ -330,6 +334,8 @@ class Board{
             this.playerView[playerId].direction = data[playerId].direction;
             this.playerView[playerId].x = data[playerId].x;
             this.playerView[playerId].y = data[playerId].y;
+            this.playerView[playerId].lives = data[playerId].lives;
+            this.playerView[playerId].name = data[playerId].name;
 
 
         }

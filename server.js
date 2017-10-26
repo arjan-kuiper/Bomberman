@@ -44,9 +44,9 @@ function setupSocketListeners(roomId){
             rooms[roomId].main = new core.Main(roomId, io, socket.id);
             rooms[roomId].main.createGame();
         }else{
+            rooms[roomId].main.addPlayer(socket.id, '');
             // console.log(rooms[roomId]);
             // rooms[roomId].main.addPlayer(socket.io, 'test');
-            rooms[roomId].main.addPlayer(socket.id, 'test');
         }
         // Add the socket to the room
         if(!rooms[roomId].clients.indexOf(socket.id) > -1){
@@ -63,7 +63,7 @@ function setupSocketListeners(roomId){
                     // todo
                     break;
                 case "join":
-                    // todo
+                    rooms[socketRooms[socket.id]].main.setPlayerName(socket.id, data.name);
                     break;
                 case "startGame":
                     // todo
