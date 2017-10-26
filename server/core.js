@@ -293,7 +293,9 @@ function Board(){
     };
 
     this.setPlayerName = function (id, name){
-        this.players[id].name = name;
+        if(typeof this.players[id] !== 'undefined'){
+            this.players[id].name = name;
+        }
     };
 
     this.removePlayer = function(id){
