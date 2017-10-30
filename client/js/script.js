@@ -142,7 +142,7 @@ class Board{
         // Laad alle afbeelding van te voren.
         let t = this;
         this.loadSprites(function(){
-            console.log("Images loaded");
+            //console.log("Images loaded");
 
             window.requestAnimationFrame(function(){
                 t.drawBoard();
@@ -401,7 +401,7 @@ class AudioManager{
         if( typeof this.bombSounds[id] !== 'undefined'){
             return;
         }
-        console.log(id);
+        //console.log(id);
         this.bombSounds[id] = this.sounds['bombSound'].cloneNode();
         this.bombSounds[id].dataset.id = id;
         let bombSounds = this.bombSounds;

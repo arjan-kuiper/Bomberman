@@ -671,18 +671,15 @@ function Player(id, name){
         switch(type){
             case 10:
                 this.bombs.push(new Bomb());
-                console.log('Bomb +1');
                 break;
             case 11:
                 for(var i = 0; i < this.bombs.length; i++){
                     this.bombs[i].morePower();
                 }
-                console.log('Bombpower +1');
                 break;
 
             case 12:
                 this.speed += 0.1;
-                console.log('Speed +1');
                 break;
         }
     };
