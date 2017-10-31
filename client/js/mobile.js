@@ -35,7 +35,6 @@ window.onload = function(){
 
     let mover = document.getElementById("circle-mover");
     let bomb = document.getElementById("bomb");
-    console.log(typeof window.orientation);
     if(typeof window.orientation !== 'undefined'){
 
         let moverX = 0, moverY = 0;

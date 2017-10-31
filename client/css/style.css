@@ -93,3 +93,109 @@ html, body{
 #circle-mover:hover{
     background: rgba(255,255,255,0.3);
 }
+
+
+.start-screen{
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    font-family: 'Fugaz One', cursive;
+    background-color: #062b3b;
+}
+
+.start-screen #wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    margin: 0 auto;
+    margin-top: -250px;
+    margin-left: -250px;
+    text-align: center;
+    color: white;
+}
+.start-screen #wrapper h1 {
+    font-size: 5em;
+    text-align: center;
+    width: 100%;
+}
+
+.start-screen #wrapper .player{
+    height: 40px;
+    width: 100%;
+    padding: 10px;
+    border-bottom: solid 1px #999;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.start-screen #wrapper .player .player-name{
+    font-size: 20px;
+    display: inline-block;
+    float: left;
+}
+.start-screen #wrapper .player .player-image{
+    margin-top: -14px;
+    height: 40px;
+    display: inline-block;
+    float: right;
+}
+
+
+button#start {
+    margin-top: 40px;
+    font-size: 1.2em;
+    font-weight: bold;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 3%;
+    color: #fff;
+    border-top-style: none;
+    border-right-style: none;
+    border-bottom: 2px solid #30c29e;
+    border-left-style: none;
+    background: #43d1af;
+}
+button#start:hover{
+    cursor: pointer;
+    background: #2ebc99;
+}
+
+@media screen and (max-width: 600px) {
+
+    .start-screen #wrapper{
+        width: 90%;
+        margin: 0;
+        top: 5%;
+        left: 5%;
+    }
+    .start-screen #wrapper h1 {
+        font-size: 3em;
+    }
+}
+@media screen and (max-height: 600px){
+
+    .start-screen{
+
+        overflow: hidden;
+        overflow-y: auto;
+    }
+    .start-screen #wrapper{
+        margin-top: 0;
+        top: 5%;
+        height: auto;
+        padding-bottom: 100px
+    }
+}
+@media screen and (max-width: 350px) {
+
+    .start-screen #wrapper h1 {
+        font-size: 2em;
+    }
+}

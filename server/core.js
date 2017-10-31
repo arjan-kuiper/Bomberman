@@ -13,12 +13,15 @@ exports.Main = function(roomId, io, roomMaster){
     this.createGame = function () {
         this.board.createBoard();
         this.board.addPlayer(roomMaster, '');
+        this.updateGame();
     };
     this.addPlayer = function(id, name) {
         this.board.addPlayer(id, name);
+        this.updateGame();
     };
     this.setPlayerName = function (id, name){
         this.board.setPlayerName(id, name);
+        this.updateGame();
     };
 
     this.removePlayer = function(id){
@@ -57,15 +60,15 @@ exports.Main = function(roomId, io, roomMaster){
             removedPlayers: this.removedPlayers
         });
     };
-    var t = this;
-    setInterval(function(){
-        t.updateGame();
-    },50/3);
 
     this.startGame = function(playerId){
         if(playerId !== this.roomMaster) return;
         this.started = true;
-        this.updateGame();
+
+        var t = this;
+        setInterval(function(){
+            t.updateGame();
+        },50/3);
     };
 
 
@@ -115,7 +118,9 @@ exports.Main = function(roomId, io, roomMaster){
         // WASD: 87, 65, 83, 68
         // Pijltjes zelfde volgorde: 38, 37, 40, 39
         // Spatie: 32
-        this.started = true;
+        // this.started = true;
+
+
         if(!this.started) return;
         var player = this.board.getPlayerById(playerId);
         if(typeof player == 'undefined' || player.isDead()) return;
@@ -551,7 +556,7 @@ function Board(){
                 if(blockType === 2){
                     this.spawnRandomPowerup(gridCoords);
                     return 2;
-                } 
+                }
                 return 1;
             }else{
                 return 0;
@@ -566,6 +571,10 @@ function Board(){
         var board = this;
         setTimeout(function(){
             for(var i = 0; i < otherFireCells.length; i++) {
+                if( board.grid[otherFireCells[i].y][otherFireCells[i].x] !== 24 &&
+                    board.grid[otherFireCells[i].y][otherFireCells[i].x] !== 25){
+                    continue;
+                }
                 board.grid[otherFireCells[i].y][otherFireCells[i].x] = 0;
             }
         }, 1000);
@@ -583,7 +592,7 @@ function Board(){
             var randomPowerup = Math.floor(Math.random() * powerups.length);
             this.grid[gridCoords.y][gridCoords.x] = powerups[randomPowerup];
         }
-    }
+    };
 
     this.blockCollisions = function(x, y){
         return {

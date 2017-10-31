@@ -70,3 +70,32 @@ body {
 :-ms-input-placeholder {
     text-align: center;
 }
+
+
+@media screen and (max-width: 600px) {
+
+    #wrapper{
+        width: 90%;
+        margin: 0;
+        top: 5%;
+        left: 5%;
+    }
+    #wrapper h1 {
+        font-size: 3em;
+    }
+}
+@media screen and (max-height: 600px){
+
+    #wrapper{
+        margin-top: 0;
+        top: 5%;
+        height: auto;
+        padding-bottom: 100px
+    }
+}
+@media screen and (max-width: 350px) {
+
+    #wrapper h1 {
+        font-size: 2em;
+    }
+}

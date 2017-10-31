@@ -1,3 +1,5 @@
+let fps = 30; // Frames per second
+
 class Main{
     constructor(playerName, audioManager){
         this.network = new Network();
@@ -6,10 +8,31 @@ class Main{
 
         let thisBoard = this.board;
         this.network.getMessage(function(data){
-            // console.log(data);
             thisBoard.setBoardData(data.board);
             thisBoard.removePlayers(data.removedPlayers);
             thisBoard.setPlayerView(data.playerView);
+            if(!data.started){
+
+                let players = $('.players');
+                    players.html("");
+                for(let playerId in data.roomPlayers){
+                    if(!data.roomPlayers.hasOwnProperty(playerId)) continue;
+
+                    let player = $("<div class='player'></div>");
+
+                    player.append("<div class='player-name'>" + data.roomPlayers[playerId].name + "</div>");
+
+                    let img = thisBoard.playerSprites[data.roomPlayers[playerId].number].front[0].cloneNode();
+                        img.setAttribute("class", "player-image");
+
+                    player.append(img);
+
+                    players.append(player);
+
+                }
+            }else{
+                $(".start-screen").fadeOut();
+            }
         });
         this.allowedKeyCodes = [87, 65, 83, 68, 32, 38, 37, 40, 39]; // WASD, pijltjes en spatie
 
@@ -21,9 +44,18 @@ class Main{
         let t = this;
         this.keySend = setInterval(function(){
             t.network.sendMessage({func: "keyHandle", key: t.keyPress});
-        },50/3);
-    }
+        },1000/fps);
 
+        this.network.ifOwner(function(){
+
+            let div = $("<button id='start'>START</button>");
+            $(".start-screen #wrapper").append(div);
+
+            div.click(function(){
+                t.network.sendMessage({func: "startGame"});
+            });
+        })
+    }
     setupListener(){
         let allowedKeyCodes = this.allowedKeyCodes;
         let t = this;
@@ -63,6 +95,15 @@ class Network{
     sendMessage(msg){
         this.socket.emit("client", msg);
     }
+    ifOwner(callback){
+        let t = this;
+        this.socket.on('owner',function(data){
+            if(data === t.socket.id){
+                callback();
+            }
+        });
+    }
+
 
 }
 
@@ -142,7 +183,6 @@ class Board{
         // Laad alle afbeelding van te voren.
         let t = this;
         this.loadSprites(function(){
-            //console.log("Images loaded");
 
             window.requestAnimationFrame(function(){
                 t.drawBoard();
@@ -279,7 +319,7 @@ class Board{
             window.requestAnimationFrame(function(){
                 t.drawBoard();
             });
-        },50);
+        },1000/fps);
     }
 
     /**
@@ -295,7 +335,7 @@ class Board{
             for (let key in this.playerView) {
                 if (!this.playerView.hasOwnProperty(key)) continue;
 
-                if(this.playerView[key].lives === 0) continue;
+                if(this.playerView[key].lives <= 0) continue;
                 // Draw player
                 this.playersCtx.drawImage(
                     this.playerSprites[this.playerView[key].playerNumber][this.playerView[key].direction][this.playerView[key].num], // Image
@@ -328,7 +368,7 @@ class Board{
             window.requestAnimationFrame(function(){
                 t.drawPlayers();
             });
-        },50/3);
+        },1000/fps);
 
     }
 
@@ -340,7 +380,6 @@ class Board{
             }
 
             if(typeof this.playerView[playerId] === 'undefined'){
-                // console.log(data[playerId].x + "," + data[playerId].y);
 
                 this.playerView[playerId] = {
                     direction: data[playerId].direction,
@@ -401,7 +440,6 @@ class AudioManager{
         if( typeof this.bombSounds[id] !== 'undefined'){
             return;
         }
-        //console.log(id);
         this.bombSounds[id] = this.sounds['bombSound'].cloneNode();
         this.bombSounds[id].dataset.id = id;
         let bombSounds = this.bombSounds;
@@ -409,21 +447,11 @@ class AudioManager{
             delete bombSounds[this.dataset.id];
         });
         this.bombSounds[id].play();
-        // this.bombSounds[id].play();
-        // this.bombSound.play();
     }
     playingBGM(){
         let bgm = this.sounds['playingBGM'];
-        // setInterval(function(){
-        //     if(bgm.currentTime >= 64){
-        //         // bgm.currentTime = 1.32;
-        //         bgm.currentTime = 3.24;
-        //     }
-        // },1000);
         bgm.play();
         bgm.loop = true;
-
-        // bgm.currentTime = 63;
     }
 
 }
@@ -436,9 +464,9 @@ let playerName = prompt("Please enter a nickname");
 while(playerName == "" || playerName == null){
     playerName = prompt("Please enter a nickname");
 }
-
-
 let main = new Main(playerName, am);
+
+
 Object.size = function(obj) {
     let size = 0, key;
     for (key in obj) {

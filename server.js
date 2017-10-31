@@ -43,8 +43,11 @@ function setupSocketListeners(roomId){
         if(rooms[roomId].main === undefined){
             rooms[roomId].main = new core.Main(roomId, io, socket.id);
             rooms[roomId].main.createGame();
+            socket.emit('owner', socket.id);
         }else{
-            rooms[roomId].main.addPlayer(socket.id, '');
+            if(!rooms[roomId].main.started){
+                rooms[roomId].main.addPlayer(socket.id, '');
+            }
             // console.log(rooms[roomId]);
             // rooms[roomId].main.addPlayer(socket.io, 'test');
         }
@@ -66,7 +69,7 @@ function setupSocketListeners(roomId){
                     rooms[socketRooms[socket.id]].main.setPlayerName(socket.id, data.name);
                     break;
                 case "startGame":
-                    // todo
+                    rooms[socketRooms[socket.id]].main.startGame(socket.id);
                     break;
                 case "keyHandle":
                     // console.log('(' + socket.id + ') KeyCode: ' + data.key);
