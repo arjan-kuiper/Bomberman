@@ -1,3 +1,4 @@
+
 exports.Main = function(roomId, io, roomMaster){
     this.board = new Board();
     this.io = io;
@@ -5,6 +6,9 @@ exports.Main = function(roomId, io, roomMaster){
     this.roomMaster = roomMaster;
     this.started = false;
     this.removedPlayers = [];
+
+    const UPS = 60; // Updates per second (like fps but than updates instead of frames)
+
 
     this.getBoard = function (){
         return this.board;
@@ -26,8 +30,19 @@ exports.Main = function(roomId, io, roomMaster){
 
     this.removePlayer = function(id){
         this.board.removePlayer(id);
+        if(id === this.roomMaster){
+            var playersLength = Object.size(this.board.getPlayers());
+            // playersLength
+            if(playersLength <= 0){
+                return false;
+            }else{
+                this.roomMaster = Object.keys(this.board.getPlayers())[0];
+                this.io.emit('owner', this.roomMaster);
+            }
+        }
         this.removedPlayers[this.removedPlayers.length] = id;
         this.updateGame();
+        return true;
     };
 
     this.updateGame = function(){
@@ -49,29 +64,70 @@ exports.Main = function(roomId, io, roomMaster){
             }
 
         }
+        var players = this.board.getPlayers();
+        if(this.started){
 
-        // Send the update info
-        this.io.sockets.in(this.roomId).emit("updateGame", {
-            board: this.board.getGridData(),
-            roomPlayers: this.board.getPlayers(),
-            playerView: this.board.getPlayerView(),
-            size: this.board.getSize(),
-            started: this.started,
-            removedPlayers: this.removedPlayers
-        });
+            var survivors = [];
+            for(var k in players){
+                if(!players.hasOwnProperty(k)) continue;
+                if(!players[k].isDead()) survivors[survivors.length] = k;
+                if(survivors.length > 1) break;
+            }
+            if(survivors.length === 1){
+                this.started = false;
+                var winner = survivors[0];
+                players[winner].won();
+                this.io.sockets.in(this.roomId).emit("gameEnded", {
+                    winner: winner,
+                    removedPlayers: this.removedPlayers,
+                    roomPlayers: players
+                });
+                this.board = null;
+                this.board = new Board();
+                for(var id in players){
+
+                    this.board.addPlayer(id, players[id].name);
+                    this.board.getPlayerById(id).score = players[id].score;
+                }
+                this.board.createBoard();
+
+                this.updateGame();
+
+                return;
+            }
+            // Send the update info
+            this.io.sockets.in(this.roomId).emit("updateGame", {
+                board: this.board.getGridData(),
+                playerView: this.board.getPlayerView(),
+                started: this.started,
+                removedPlayers: this.removedPlayers
+            });
+
+        }else{
+            // Send the update info
+            this.io.sockets.in(this.roomId).emit("updateGame", {
+                roomPlayers: players,
+                size: this.board.getSize(),
+                started: this.started
+            });
+        }
     };
 
+
+    // Start te game
     this.startGame = function(playerId){
         if(playerId !== this.roomMaster) return;
         this.started = true;
 
-        var t = this;
-        setInterval(function(){
-            t.updateGame();
-        },50/3);
     };
 
-
+    // Update game every X second
+    var t = this;
+    setInterval(function(){
+        if(t.started){
+            t.updateGame();
+        }
+    },1000/UPS);
 
 
     this.walkingPlayers = {};
@@ -127,16 +183,13 @@ exports.Main = function(roomId, io, roomMaster){
         if(typeof player != 'undefined'){
             var playerPos = player.getPosition();
             var movementBlocked = [-1, 1, 2, 21, 22, 23];
-    
-            var globalSpeed = 4;
-            var maxBlockCollision = {
-                top: -40,
-                left: 0,
-                right: 10,
-                bottom: this.board.cellHeight-40,
-            };
-    
+
+            // Calculate speed if updates per second has changed
+            var globalSpeed = 4 * ( 60 / UPS );
+
             var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
+
+
             // Do a quick check to see if the player is CURRENTLY on a powerup
             var powerups = [10, 11, 12];
             if(powerups.indexOf(this.board.getBlock(currentBlock.x, currentBlock.y)) > -1){
@@ -187,7 +240,7 @@ exports.Main = function(roomId, io, roomMaster){
                     // Down
                     player.setDirection(1);
                     var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y+1);
-    
+
                     var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
     
     
@@ -216,8 +269,6 @@ exports.Main = function(roomId, io, roomMaster){
                     break;
                 case 32:
                     // Spacebar - Place bomb and remove after 3 seconds.
-                    // console.log(player.placeBomb());
-                    // console.log(player.bombs);
 
                     if(player.placeBomb() !== null){
 
@@ -266,10 +317,6 @@ exports.Main = function(roomId, io, roomMaster){
                             }, 600);
                             tempGame.board.grid[gridCoords.y][gridCoords.x] = 22;
                         }, 600);
-
-
-                        // setTimeout(function(){
-                        // }, 3000);
                     }
                     break;
             }
@@ -288,7 +335,6 @@ function Board(){
     this.cellWidth = 50;
     this.cellHeight = 50;
     this.playerNumbers = [4,3,2,1];
-    this.deadPlayers = [];
     this.bombs = [];
 
     this.addPlayer = function(id, name){
@@ -332,7 +378,7 @@ function Board(){
                 return this.players[id];
             }
         }
-    }
+    };
 
     this.getPlayers = function(){
         return this.players;
@@ -455,10 +501,6 @@ function Board(){
             for(var i = 0; i < fireCells.length; i++){
                 if(fireCells[i].x === playerBlock.x && fireCells[i].y === playerBlock.y){
                     this.players[player].hit();
-                    // if(this.players[player].isDead()){
-                    //     this.deadPlayers.push(player);
-                    //     console.log(player + ' died.');
-                    // }
                 }
             }
         }
@@ -630,6 +672,7 @@ function Player(id, name){
     this.direction = 1;
     this.number = null;
     this.bombs[0].updateTimestamp();
+    this.score = 0;
     /**
      * @return Bomb
      */
@@ -722,7 +765,12 @@ function Player(id, name){
     this.getNumber = function(){
         return this.number;
     };
-
+    this.won = function(){
+        this.score++;
+    };
+    this.getScore = function(){
+        return this.score;
+    };
 }
 
 function Bomb(){
@@ -755,6 +803,8 @@ function Bomb(){
     this.getPower = function(){
         return this.bombPower;
     }
+
+
 }
 
 Object.size = function(obj) {

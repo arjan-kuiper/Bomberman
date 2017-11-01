@@ -1,5 +1,6 @@
 // Constants and variables
 const PORT = 1337;
+
 var rooms = {};
 var socketRooms = {};
 
@@ -87,9 +88,17 @@ function setupSocketListeners(roomId){
     
         socket.on('disconnect', function(){
             rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
-            rooms[roomId].main.removePlayer(socket.id);
+            // delete rooms[roomId].clients[rooms[roomId].clients.indexOf(socket.id)];
+            console.log(rooms[roomId].clients.length);
+            if(rooms[roomId].clients.length <= 0){
+                delete rooms[roomId];
+                console.log("Room " + roomId + " deleted");
+            }else{
+                console.log('user disconnected and removed');
+
+                rooms[roomId].main.removePlayer(socket.id);
+            }
             socket.disconnect(true);
-            console.log('user disconnected and removed');
         });
     });
 }

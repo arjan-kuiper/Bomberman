@@ -1,18 +1,16 @@
-let fps = 30; // Frames per second
+const FPS = 30; // Frames per second
 
 class Main{
     constructor(playerName, audioManager){
         this.network = new Network();
         this.board = new Board(audioManager);
         this.network.sendMessage({func: "join", name: playerName});
-
+        this.started = false;
         let thisBoard = this.board;
+        let t = this;
         this.network.getMessage(function(data){
-            thisBoard.setBoardData(data.board);
-            thisBoard.removePlayers(data.removedPlayers);
-            thisBoard.setPlayerView(data.playerView);
             if(!data.started){
-
+                thisBoard.setSize(data.size);
                 let players = $('.players');
                     players.html("");
                 for(let playerId in data.roomPlayers){
@@ -20,7 +18,7 @@ class Main{
 
                     let player = $("<div class='player'></div>");
 
-                    player.append("<div class='player-name'>" + data.roomPlayers[playerId].name + "</div>");
+                    player.append("<div class='player-name'>" + data.roomPlayers[playerId].name + " (" + data.roomPlayers[playerId].score + ")</div>");
 
                     let img = thisBoard.playerSprites[data.roomPlayers[playerId].number].front[0].cloneNode();
                         img.setAttribute("class", "player-image");
@@ -31,7 +29,13 @@ class Main{
 
                 }
             }else{
-                $(".start-screen").fadeOut();
+                if(!t.started){
+                    $(".start-screen").fadeOut();
+                    t.started = true;
+                }
+                thisBoard.removePlayers(data.removedPlayers);
+                thisBoard.setBoardData(data.board);
+                thisBoard.setPlayerView(data.playerView);
             }
         });
         this.allowedKeyCodes = [87, 65, 83, 68, 32, 38, 37, 40, 39]; // WASD, pijltjes en spatie
@@ -41,20 +45,37 @@ class Main{
         this.setupListener();
         this.keyPress = {};
 
-        let t = this;
         this.keySend = setInterval(function(){
             t.network.sendMessage({func: "keyHandle", key: t.keyPress});
-        },1000/fps);
+        },1000/FPS);
 
-        this.network.ifOwner(function(){
 
-            let div = $("<button id='start'>START</button>");
-            $(".start-screen #wrapper").append(div);
 
-            div.click(function(){
-                t.network.sendMessage({func: "startGame"});
-            });
-        })
+        this.network.ifOwner(function(isOwner){
+
+            if(isOwner){
+                let div = $("<button id='start'>START</button>");
+                $(".start-screen #wrapper").append(div);
+
+                div.click(function(){
+                    t.network.sendMessage({func: "startGame"});
+                });
+            }else{
+                $("#start").remove();
+            }
+        });
+
+        this.network.onGameEnd(function(data){
+            if(data.winner){
+                if(t.network.socket.id === data.winner){
+                    alert("Congratulation, you won the game!");
+                }else{
+                    alert("Ahhh, you lost the game. \n" + data.roomPlayers[data.winner].name + " won the game.");
+                }
+                $(".start-screen").fadeIn();
+                t.started = false;
+            }
+        });
     }
     setupListener(){
         let allowedKeyCodes = this.allowedKeyCodes;
@@ -89,7 +110,6 @@ class Network{
     getMessage(callback){
         this.socket.on('updateGame', function(data){
             callback(data);
-            // document.getElementById('debugInfo').innerHTML = data; // FOR DEBUGGING
         });
     }
     sendMessage(msg){
@@ -98,9 +118,12 @@ class Network{
     ifOwner(callback){
         let t = this;
         this.socket.on('owner',function(data){
-            if(data === t.socket.id){
-                callback();
-            }
+            callback(data === t.socket.id);
+        });
+    }
+    onGameEnd(callback){
+        this.socket.on('gameEnded', function(data){
+            callback(data);
         });
     }
 
@@ -319,7 +342,7 @@ class Board{
             window.requestAnimationFrame(function(){
                 t.drawBoard();
             });
-        },1000/fps);
+        },1000/FPS);
     }
 
     /**
@@ -353,7 +376,11 @@ class Board{
                 this.playersCtx.font = "20px Arial";
                 this.playersCtx.fillStyle = "white";
                 this.playersCtx.textAlign = "center";
-                this.playersCtx.fillText(this.playerView[key].name,(this.playerView[key].x + 20),this.playerView[key].y);
+                this.playersCtx.fillText(
+                    this.playerView[key].name + " (" + this.playerView[key].lives + ")",
+                    ( this.playerView[key].x + 20 ),
+                    this.playerView[key].y
+                );
 
                 // New player animation image
                 this.playerView[key].num++;
@@ -368,7 +395,7 @@ class Board{
             window.requestAnimationFrame(function(){
                 t.drawPlayers();
             });
-        },1000/fps);
+        },1000/FPS);
 
     }
 
@@ -423,7 +450,12 @@ class Board{
     getBoardData(){
         return this.board;
     }
-
+    setSize(data){
+        this.width = data.width;
+        this.height = data.height;
+        this.cellWidth = data.cellWidth;
+        this.cellHeight = data.cellHeight;
+    }
 }
 
 class AudioManager{
