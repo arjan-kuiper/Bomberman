@@ -9,7 +9,6 @@ exports.Main = function(roomId, io, roomMaster){
 
     const UPS = 60; // Updates per second (like fps but than updates instead of frames)
 
-
     this.getBoard = function (){
         return this.board;
     };
@@ -19,10 +18,12 @@ exports.Main = function(roomId, io, roomMaster){
         this.board.addPlayer(roomMaster, '');
         this.updateGame();
     };
+
     this.addPlayer = function(id, name) {
         this.board.addPlayer(id, name);
         this.updateGame();
     };
+
     this.setPlayerName = function (id, name){
         this.board.setPlayerName(id, name);
         this.updateGame();
@@ -32,7 +33,6 @@ exports.Main = function(roomId, io, roomMaster){
         this.board.removePlayer(id);
         if(id === this.roomMaster){
             var playersLength = Object.size(this.board.getPlayers());
-            // playersLength
             if(playersLength <= 0){
                 return false;
             }else{
@@ -48,8 +48,6 @@ exports.Main = function(roomId, io, roomMaster){
     this.updateGame = function(){
         for(var playerId in this.walkingPlayers){
             if(!this.walkingPlayers.hasOwnProperty(playerId)) continue;
-
-
             if(this.walkingPlayers[playerId].up === true){
                 this.keyHandle(38, playerId);
             }
@@ -62,11 +60,9 @@ exports.Main = function(roomId, io, roomMaster){
             if(this.walkingPlayers[playerId].right === true) {
                 this.keyHandle(39, playerId);
             }
-
         }
         var players = this.board.getPlayers();
         if(this.started){
-
             var survivors = [];
             for(var k in players){
                 if(!players.hasOwnProperty(k)) continue;
@@ -85,14 +81,11 @@ exports.Main = function(roomId, io, roomMaster){
                 this.board = null;
                 this.board = new Board();
                 for(var id in players){
-
                     this.board.addPlayer(id, players[id].name);
                     this.board.getPlayerById(id).score = players[id].score;
                 }
                 this.board.createBoard();
-
                 this.updateGame();
-
                 return;
             }
             // Send the update info
@@ -113,8 +106,7 @@ exports.Main = function(roomId, io, roomMaster){
         }
     };
 
-
-    // Start te game
+    // Start teh game
     this.startGame = function(playerId){
         if(playerId !== this.roomMaster) return;
         this.started = true;
@@ -129,15 +121,11 @@ exports.Main = function(roomId, io, roomMaster){
         }
     },1000/UPS);
 
-
     this.walkingPlayers = {};
     this.setKeys = function(keys, playerId){
         this.walkingPlayers[playerId] = {up: false, left: false, down: false, right: false, spacebar: false};
-
-
         for(var key in keys){
             if(!keys.hasOwnProperty(key)) continue;
-
             switch (parseInt(key)){
                 case 87:
                 case 38:
@@ -165,17 +153,12 @@ exports.Main = function(roomId, io, roomMaster){
                     break;
             }
         }
-
     };
-
-
 
     this.keyHandle = function(keyId, playerId){
         // WASD: 87, 65, 83, 68
         // Pijltjes zelfde volgorde: 38, 37, 40, 39
         // Spatie: 32
-        // this.started = true;
-
 
         if(!this.started) return;
         var player = this.board.getPlayerById(playerId);
@@ -183,34 +166,24 @@ exports.Main = function(roomId, io, roomMaster){
         if(typeof player != 'undefined'){
             var playerPos = player.getPosition();
             var movementBlocked = [-1, 1, 2, 21, 22, 23];
-
             // Calculate speed if updates per second has changed
             var globalSpeed = 4 * ( 60 / UPS );
-
             var currentBlock = this.board.getBlockXAndY(playerPos.x, playerPos.y);
-
-
             // Do a quick check to see if the player is CURRENTLY on a powerup
             var powerups = [10, 11, 12];
             if(powerups.indexOf(this.board.getBlock(currentBlock.x, currentBlock.y)) > -1){
                 player.powerUp(this.board.getBlock(currentBlock.x, currentBlock.y));
                 this.board.grid[currentBlock.y][currentBlock.x] = 0;
             }
-
             var playerPoints = player.getCollisionPoints();
             switch (keyId){
                 case 87:
                 case 38:
                     // Up
-    
                     player.setDirection(3);
-    
                     var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y-1);
-    
                     var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y-1);
-    
-    
-                    if( ( blockPoints.bottomLeft.x < playerPoints.topLeft.x &&
+                    if((blockPoints.bottomLeft.x < playerPoints.topLeft.x &&
                           blockPoints.bottomRight.x > playerPoints.topRight.x &&
                           movementBlocked.indexOf(moveToBlock) <= 0 ) ||
                         currentBlock.y * 50 < playerPos.y-player.speed*globalSpeed + 40 ){
@@ -220,31 +193,23 @@ exports.Main = function(roomId, io, roomMaster){
                 case 65:
                 case 37:
                     // Left
-    
                     player.setDirection(2);
-    
                     var blockPoints = this.board.blockCollisions(currentBlock.x-1, currentBlock.y);
-    
                     var moveToBlock = this.board.getBlock(currentBlock.x-1, currentBlock.y);
-    
-                    if( ( blockPoints.topRight.y < playerPoints.topLeft.y &&
+                    if((blockPoints.topRight.y < playerPoints.topLeft.y &&
                             blockPoints.bottomRight.y > playerPoints.bottomLeft.y &&
                             movementBlocked.indexOf(moveToBlock) <= 0 ) ||
                         currentBlock.x * 50 < playerPos.x - player.speed*globalSpeed ){
                         player.setPosition(playerPos.x -= player.speed*globalSpeed, playerPos.y);
                     }
-    
                     break;
                 case 83:
                 case 40:
                     // Down
                     player.setDirection(1);
                     var blockPoints = this.board.blockCollisions(currentBlock.x, currentBlock.y+1);
-
                     var moveToBlock = this.board.getBlock(currentBlock.x, currentBlock.y+1);
-    
-    
-                    if( ( blockPoints.topLeft.x < playerPoints.bottomLeft.x &&
+                    if((blockPoints.topLeft.x < playerPoints.bottomLeft.x &&
                             blockPoints.topRight.x > playerPoints.bottomRight.x &&
                             movementBlocked.indexOf(moveToBlock) <= 0 ) ||
                         currentBlock.y * 50 < playerPos.y+player.speed*globalSpeed ){
@@ -256,35 +221,25 @@ exports.Main = function(roomId, io, roomMaster){
                     // Right
                     player.setDirection(4);
                     var blockPoints = this.board.blockCollisions(currentBlock.x+1, currentBlock.y);
-    
                     var moveToBlock = this.board.getBlock(currentBlock.x+1, currentBlock.y);
-    
-                    if( ( blockPoints.topLeft.y < playerPoints.topRight.y &&
+                    if((blockPoints.topLeft.y < playerPoints.topRight.y &&
                             blockPoints.bottomLeft.y > playerPoints.bottomRight.y &&
                             movementBlocked.indexOf(moveToBlock) <= 0 ) ||
                         currentBlock.x * 50 > playerPos.x - 5 ){
                         player.setPosition(playerPos.x += player.speed*globalSpeed, playerPos.y);
                     }
-    
                     break;
                 case 32:
                     // Spacebar - Place bomb and remove after 3 seconds.
-
-                    if(player.placeBomb() !== null){
-
-    
+                    if(player.placeBomb() !== null){  
                         var gridCoords = this.board.getBlockXAndY(playerPos.x+20, playerPos.y+20);
                         var currentCell = this.board.grid[gridCoords.y][gridCoords.x];
                         this.board.grid[gridCoords.y][gridCoords.x] = 21;
-
-    
                         var board = this.board;
                         var tempGame = this;
                         var fireCells;
-
                         if(typeof board.bombs[gridCoords.y] === 'undefined') board.bombs[gridCoords.y] = [];
                         board.bombs[gridCoords.y][gridCoords.x] = playerId;
-
 
                         setTimeout(function(){
                             if(board.bombs[gridCoords.y][gridCoords.x] === false) return; // Return when bomb already exploded
@@ -292,26 +247,19 @@ exports.Main = function(roomId, io, roomMaster){
                                 if(board.bombs[gridCoords.y][gridCoords.x] === false) return;
                                 setTimeout(function(){
                                     if(board.bombs[gridCoords.y][gridCoords.x] === false) return;
-
-
-
                                         fireCells = board.spawnFire(gridCoords, playerId);
-
-
                                         setTimeout(function(){
                                             for(var i = 0; i < fireCells.length; i++) {
                                                 // 10 - Extra bomb
                                                 // 11 - Extra bomb power
                                                 // 12 - Faster player movement
                                                 var powerups = [10, 11, 12];
-
                                                 // Prevent powerups from being overwritten again
                                                 if(powerups.indexOf(board.getBlock(fireCells[i].x, fireCells[i].y)) < 0){
                                                     board.grid[fireCells[i].y][fireCells[i].x] = 0;
                                                 }
                                             }
                                         }, 1000);
-
                                 }, 600);
                                 tempGame.board.grid[gridCoords.y][gridCoords.x] = 23;
                             }, 600);
@@ -322,8 +270,6 @@ exports.Main = function(roomId, io, roomMaster){
             }
         }
     };
-
-
     return this;
 };
 
@@ -342,7 +288,6 @@ function Board(){
         this.players[id] = new Player(id, name);
         var playerNumber = this.playerNumbers.pop();
         this.players[id].setNumber(playerNumber);
-
         switch (playerNumber){
             case 1:
                 this.players[id].setPosition(55, 20);
@@ -388,7 +333,6 @@ function Board(){
         // Kijkt of het bord beedte/hoogte even is
         var evenWidth = this.width % 2 === 0;
         var evenHeight = this.height % 2 === 0;
-
         // Het midden van de x- en y-as
         var middleWidth = this.width/2;
         var middleHeight = this.height/2;
@@ -396,33 +340,21 @@ function Board(){
         for(var y=0; y < this.height ;y++){
             this.grid[y] = [];
             for(var x=0; x < this.width ;x++){
-
                 if(y === 0 || x === 0 || y === this.height-1 || x === this.width-1){
                     this.grid[y][x] = 1;
                 }else{
-
-
                     this.grid[y][x] = 0;
-
-                    // Breakable blocks as an X
-                    // if( ( (x+y === this.width-1 || x+y === this.height-1) && x > 1  && y > 1 ) || (x === y && x !== 1 && x !== this.width-2) ){
-                    //     this.grid[y][x] = 2;
-                    // }
-
-                    // Breakable blocks (sides)
+                                        // Breakable blocks (sides)
                     if( (x > 4 && x < this.width-5 && ( y === 1 || y === this.height-2 ) ) || // Top and bottom
                         (y > 4 && y < this.height-5 && ( x === 1 || x === this.width-2 ) ) ){ // Left and right
                         this.grid[y][x] = 2;
                     }
-
-
                     // Breakable blocks (whole board)
                     if( (x % 3 === ( !evenWidth || x < middleWidth ? 0 : 1 ) && x > 1 && x < this.width-2  ) ||
                         (y % 3 === ( !evenHeight || y < middleHeight ? 0 : 1 ) && y > 1 && y < this.height-2 )
                     ){
                         this.grid[y][x] = 2;
                     }
-
                     // Stones in the middle
                     if( y % 2 === ( !evenHeight || y < middleHeight ? 0 : 1 ) &&
                         x % 2 === ( !evenWidth || x < middleWidth ? 0 : 1 ) ){
@@ -443,12 +375,10 @@ function Board(){
     this.getGridFromCoords = function(x, y){
         realX = x + 20;
         realY = y + 45;
-        
         for(var j = 0; j < this.grid.length; j++){
             for(var i = 0; i < this.grid[j].length; i++){
                 cellX = j*this.cellWidth;
                 cellY = i*this.cellHeight;
-
                 if(realX > cellX && realX < cellX + this.cellWidth){
                     if(realY > cellY && realY < cellY + this.cellHeight){
                         return {
@@ -460,6 +390,7 @@ function Board(){
             }
         }
     };
+
     this.getBlockXAndY = function(x, y){
         return {
             x: parseInt( ( x ) / this.cellWidth),
@@ -468,6 +399,7 @@ function Board(){
             yInBlock: y % this.cellHeight
         };
     };
+
     this.getBlock = function(x,y){
         return this.grid[y][x];
     };
@@ -489,7 +421,6 @@ function Board(){
                 }
             }
         }
-
         return -1;
     };
 
@@ -510,11 +441,9 @@ function Board(){
         // this.players
         var playerView = {};
         for(var playerId in this.players){
-
             if(!this.players.hasOwnProperty(playerId)) continue;
             var player = this.players[playerId];
             var pos = player.getPosition();
-
 
             playerView[playerId] = {
                 direction: [null,'front', 'left','back','right'][player.getDirection()],
@@ -536,10 +465,8 @@ function Board(){
         var bombPower = this.getPlayerById(id).getBombPower();
         var fireCells = [{x: gridCoords.x, y: gridCoords.y}];
         this.grid[gridCoords.y][gridCoords.x] = 24;
-
         // Up
         for(var i = 1; i <= bombPower; i++){
-
             var handler = this.handleGridFire({y: gridCoords.y-i,x: gridCoords.x});
             if(handler !== 0){
                 fireCells.push({y: gridCoords.y-i,x: gridCoords.x});
@@ -550,7 +477,6 @@ function Board(){
         }
         // Down
         for(var i = 1; i <= bombPower; i++){
-
             var handler = this.handleGridFire({y: gridCoords.y+i,x: gridCoords.x});
             if(handler !== 0){
                 fireCells.push({y: gridCoords.y+i,x: gridCoords.x});
@@ -558,11 +484,9 @@ function Board(){
             }else{
                 break;
             }
-
         }
         // left
         for(var i = 1; i <= bombPower; i++){
-
             var handler = this.handleGridFire({y: gridCoords.y,x: gridCoords.x-i});
             if(handler !== 0){
                 fireCells.push({y: gridCoords.y,x: gridCoords.x-i});
@@ -580,9 +504,7 @@ function Board(){
             }else{
                 break;
             }
-
         }
-
         this.playerDamager(fireCells); // To check if players should be receiving damage at the explosion
         return fireCells;
     };
@@ -604,7 +526,6 @@ function Board(){
                 return 0;
             }
         }
-
     };
     this.otherBomb = function(gridCoords){
         // Explode bomb of other
@@ -685,7 +606,6 @@ function Player(id, name){
         }
         return null;
     };
-
 
     this.getCollisionPoints = function(){
         return {

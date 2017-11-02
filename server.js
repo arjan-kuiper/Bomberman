@@ -49,8 +49,6 @@ function setupSocketListeners(roomId){
             if(!rooms[roomId].main.started){
                 rooms[roomId].main.addPlayer(socket.id, '');
             }
-            // console.log(rooms[roomId]);
-            // rooms[roomId].main.addPlayer(socket.io, 'test');
         }
         // Add the socket to the room
         if(!rooms[roomId].clients.indexOf(socket.id) > -1){
@@ -64,7 +62,6 @@ function setupSocketListeners(roomId){
             if( typeof data.func === "undefined") return;
             switch (data.func){
                 case "createGame":
-                    // todo
                     break;
                 case "join":
                     rooms[socketRooms[socket.id]].main.setPlayerName(socket.id, data.name);
@@ -73,7 +70,6 @@ function setupSocketListeners(roomId){
                     rooms[socketRooms[socket.id]].main.startGame(socket.id);
                     break;
                 case "keyHandle":
-                    // console.log('(' + socket.id + ') KeyCode: ' + data.key);
                     if(typeof data.key === "number"){
                         if(data.key === 32){
                             rooms[socketRooms[socket.id]].main.keyHandle(32, socket.id);
@@ -88,7 +84,6 @@ function setupSocketListeners(roomId){
     
         socket.on('disconnect', function(){
             rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
-            // delete rooms[roomId].clients[rooms[roomId].clients.indexOf(socket.id)];
             console.log(rooms[roomId].clients.length);
             if(rooms[roomId].clients.length <= 0){
                 delete rooms[roomId];
