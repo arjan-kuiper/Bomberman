@@ -10,7 +10,8 @@ var app = express();
 var path = require('path');
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-// Our own modules
+
+// Get our core file for the game
 var core = require('./server/core');
 
 // Express routing / paths
@@ -56,8 +57,13 @@ function setupSocketListeners(roomId){
             socketRooms[socket.id] = roomId;
             socket.join(roomId);
         }
+
+        // Update the game for the first time
         rooms[roomId].main.updateGame();
 
+        /**
+         * Handles client messages
+         */
         socket.on('client', function(data){
             if( typeof data.func === "undefined") return;
             switch (data.func){
@@ -77,20 +83,20 @@ function setupSocketListeners(roomId){
                     }else{
                         rooms[socketRooms[socket.id]].main.setKeys(data.key, socket.id);
                     }
-
                     break;
             }
         });
-    
+
+        /**
+         * Remove a player when he/she is disconnected
+         * When the last player left, remove the room
+         */
         socket.on('disconnect', function(){
             rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
             console.log(rooms[roomId].clients.length);
             if(rooms[roomId].clients.length <= 0){
                 delete rooms[roomId];
-                console.log("Room " + roomId + " deleted");
             }else{
-                console.log('user disconnected and removed');
-
                 rooms[roomId].main.removePlayer(socket.id);
             }
             socket.disconnect(true);
