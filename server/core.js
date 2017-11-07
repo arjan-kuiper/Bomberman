@@ -227,6 +227,12 @@ exports.Main = function(roomId, io, roomMaster){
                 player.powerUp(this.board.getBlock(currentBlock.x, currentBlock.y));
                 this.board.grid[currentBlock.y][currentBlock.x] = 0;
             }
+
+            // Player come on fire
+            if(this.board.getBlock(currentBlock.x, currentBlock.y) === 25){
+                player.hit();
+            }
+
             var playerPoints = player.getCollisionPoints();
             switch (keyId){
                 case 87:
@@ -702,6 +708,7 @@ function Player(id, name){
     this.number = null; // Number of the player
     this.bombs[0].updateTimestamp();
     this.score = 0;
+    this.hasBeenHit = false;
 
     /**
      * Chech if a player can place a bomb
@@ -754,9 +761,16 @@ function Player(id, name){
      * When a player is hit by a bomb
      */
     this.hit = function(){
-        this.lives--;
-        if(this.lives === 0){
-            this.dead = true;
+        if(!this.hasBeenHit){
+            this.hasBeenHit = true;
+            this.lives--;
+            if(this.lives === 0){
+                this.dead = true;
+            }
+            var t = this;
+            setTimeout(function(){
+                t.hasBeenHit = false;
+            },3000);
         }
     };
 
