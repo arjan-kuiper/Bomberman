@@ -37,7 +37,7 @@ class Main{
                     if(!data.roomPlayers.hasOwnProperty(playerId)) continue;
 
                     let player = $("<div class='player'></div>");
-                        player.append("<div class='player-name'>" + data.roomPlayers[playerId].name + " (" + data.roomPlayers[playerId].score + ")</div>");
+                        player.append("<div class='player-name'>" + data.roomPlayers[playerId].name + " ( " + data.roomPlayers[playerId].score + " wins )</div>");
                     let img = thisBoard.playerSprites[data.roomPlayers[playerId].number].front[0].cloneNode();
                         img.setAttribute("class", "player-image");
 

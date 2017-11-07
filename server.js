@@ -93,7 +93,6 @@ function setupSocketListeners(roomId){
          */
         socket.on('disconnect', function(){
             rooms[roomId].clients.splice(rooms[roomId].clients.indexOf(socket.id), 1);
-            console.log(rooms[roomId].clients.length);
             if(rooms[roomId].clients.length <= 0){
                 delete rooms[roomId];
             }else{
