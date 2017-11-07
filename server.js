@@ -73,7 +73,9 @@ function setupSocketListeners(roomId){
                     rooms[socketRooms[socket.id]].main.setPlayerName(socket.id, data.name);
                     break;
                 case "startGame":
-                    rooms[socketRooms[socket.id]].main.startGame(socket.id);
+                    if(rooms[roomId].clients.length > 1){
+                        rooms[socketRooms[socket.id]].main.startGame(socket.id);
+                    }
                     break;
                 case "keyHandle":
                     if(typeof data.key === "number"){
