@@ -1,6 +1,10 @@
 
-// Full screen mode
-let fullscreenBtn = document.getElementById("fullscreenBtn");
+
+let fullscreenBtn = document.getElementById("fullscreenBtn"); // Full screen button
+
+/**
+ * Set full screen on click
+ */
 fullscreenBtn.onclick = function(){
     if (RunPrefixMethod(document, "FullScreen") || RunPrefixMethod(document, "IsFullScreen")) {
         RunPrefixMethod(document, "CancelFullScreen");
@@ -10,8 +14,11 @@ fullscreenBtn.onclick = function(){
     }
 };
 
+let pfx = ["webkit", "moz", "ms", "o", ""]; // Prefixes for different browsers
 
-let pfx = ["webkit", "moz", "ms", "o", ""];
+/**
+ * Get the correct browser function
+ */
 function RunPrefixMethod(obj, method) {
 
     let p = 0, m, t;
@@ -31,32 +38,35 @@ function RunPrefixMethod(obj, method) {
 
 }
 
+
 window.onload = function(){
 
-    let mover = document.getElementById("circle-mover");
-    let bomb = document.getElementById("bomb");
+    let mover = document.getElementById("circle-mover"); // Circle for moving
+    let bomb = document.getElementById("bomb"); // Circle for placing bomb
+
+    // Is mobile or not
     if(typeof window.orientation !== 'undefined'){
 
         let moverX = 0, moverY = 0;
         let spacing = 20; // Spacing from the middle
-        // bomb.onclick = function(){
-        //     main.placeBomb();
-        // };
+
+        // Place bomb
         bomb.addEventListener('touchstart',function(){
             main.placeBomb();
         });
 
-
+        // Set finger positions
         mover.addEventListener('touchstart',function(){
             moverX = mover.offsetLeft + mover.offsetWidth/2;
             moverY = mover.offsetTop + mover.offsetHeight/2;
         }, false);
 
+        // Set pressed keys to nothing
         mover.addEventListener("touchend", function(){
             main.keyPress = {};
         }, false);
 
-
+        // Handle the finger direction for moving
         mover.addEventListener("touchmove", function(e){
             let touches = e.changedTouches;
             let x = touches[0].pageX;
@@ -85,7 +95,7 @@ window.onload = function(){
             }
         }, false);
     }else{
-        // Remove mobile controls
+        // Remove mobile controls when not on mobile
         mover.style.display = "none";
         bomb.style.display = "none";
     }
