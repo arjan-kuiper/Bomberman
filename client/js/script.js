@@ -232,12 +232,12 @@ class Board{
             22: "Bomb/Bomb_f02.png",
             23: "Bomb/Bomb_f03.png",
 
-            24: "Flame/Flame_f02.png",
+            24: "Flame/Flame_F02.png",
             25: "Flame/Flame_f00.png",
             26: "Flame/Flame_f01.png",
-            27: "Flame/Flame_f02.png",
-            28: "Flame/Flame_f03.png",
-            29: "Flame/Flame_f04.png",
+            27: "Flame/Flame_F02.png",
+            28: "Flame/Flame_F03.png",
+            29: "Flame/Flame_F04.png",
         };
 
         // Player sprites

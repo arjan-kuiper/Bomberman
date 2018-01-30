@@ -125,6 +125,7 @@ exports.Main = function(roomId, io, roomMaster){
                 this.updateGame();
                 return;
             }
+
             // Send the update info
             this.io.sockets.in(this.roomId).emit("updateGame", {
                 board: this.board.getGridData(),
